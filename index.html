@@ -361,7 +361,7 @@
         // =========================================================================
         // 0.1. НАСТРОЙКИ АНАЛИТИКИ И ИИ-ШЕФА (БЕЗОПАСНЫЙ ПРОКСИ БЕЗ КЛЮЧА В КОДЕ)
         // =========================================================================
-        const ANALYTICS_WEBHOOK_URL = ''; // Вставь сюда URL из Google Apps Script, чтобы записывать пользователей в Google Таблицу
+        const ANALYTICS_WEBHOOK_URL = 'ВСТАВЬ_СЮДА_ССЫЛКУ_ИЗ_APPS_SCRIPT'; // Ссылка вида https://script.google.com/macros/s/.../exec
         const apiKey = ""; // Оставь пустым на GitHub! Реальный ключ спрячем в Cloudflare Worker
         const AI_PROXY_URL = 'https://airfryer-ai.pss760609.workers.dev'; // Ссылка на твой защищённый Cloudflare Worker
 
@@ -396,7 +396,7 @@
         }
 
         function trackEvent(event, details) {
-            if (!ANALYTICS_WEBHOOK_URL) return;
+            if (!ANALYTICS_WEBHOOK_URL || !ANALYTICS_WEBHOOK_URL.startsWith('http')) return;
             try {
                 const user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : {};
                 const payload = {
@@ -411,7 +411,7 @@
                 fetch(ANALYTICS_WEBHOOK_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(payload)
                 }).catch(() => {});
             } catch (e) {}
