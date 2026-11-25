@@ -2190,29 +2190,29 @@
             generateBtn.disabled = true;
             generateBtn.classList.add('opacity-60');
 
-            const currentTgUserId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id
-                ? String(tg.initDataUnsafe.user.id)
-                : '';
-            const currentTgInitData = tg && tg.initData ? String(tg.initData) : '';
-
-            let response = null;
-            let lastErr = null;
-
-            // 1. Основной запрос через защищённый Cloudflare Worker (ждём до 35 сек, пока ИИ соберёт 3 рецепта)
+            // 1. Основной запрос через защищённый Cloudflare Worker (с авто-повтором при временной перегрузке 503)
             if (AI_PROXY_URL) {
-                try {
-                    const headers = { 'Content-Type': 'application/json' };
-                    if (currentTgUserId) headers['X-Tg-User-Id'] = currentTgUserId;
-                    if (currentTgInitData) headers['X-Tg-Init-Data'] = currentTgInitData;
+                const headers = { 'Content-Type': 'application/json' };
+                if (currentTgUserId) headers['X-Tg-User-Id'] = currentTgUserId;
+                if (currentTgInitData) headers['X-Tg-Init-Data'] = currentTgInitData;
 
-                    response = await fetchWithTimeout(AI_PROXY_URL, {
-                        method: 'POST',
-                        headers,
-                        body: JSON.stringify({ query: userQuery })
-                    }, 35000);
-                } catch (err) {
-                    lastErr = err;
-                    response = null;
+                for (let attempt = 0; attempt < 2; attempt++) {
+                    try {
+                        response = await fetchWithTimeout(AI_PROXY_URL, {
+                            method: 'POST',
+                            headers,
+                            body: JSON.stringify({ query: userQuery })
+                        }, 35000);
+
+                        if (response && response.status === 503 && attempt === 0) {
+                            await new Promise(r => setTimeout(r, 1500));
+                            continue;
+                        }
+                        break;
+                    } catch (err) {
+                        lastErr = err;
+                        response = null;
+                    }
                 }
             }
 
@@ -2252,6 +2252,10 @@
 
                 if (response.status === 429) {
                     throw new Error('RATE_LIMIT_429');
+                }
+
+                if (response.status === 503) {
+                    throw new Error('OVERLOADED_503');
                 }
 
                 if (!response.ok) {
@@ -2354,6 +2358,8 @@
                     errorText.textContent = 'Сервер Cloudflare отклонил запрос (код 403). Проверь, что в воркере разрешён заголовок Origin или отключена строгая проверка Origin.';
                 } else if (msg === 'RATE_LIMIT_429') {
                     errorText.textContent = 'Слишком много запросов подряд (лимит — 10 рецептов в минуту). Подожди минуту и попробуй снова.';
+                } else if (msg === 'OVERLOADED_503') {
+                    errorText.textContent = 'Серверы нейросети Google сейчас временно перегружены (ошибка 503). Нажми «Сгенерировать 3 рецепта» ещё раз через пару секунд.';
                 } else {
                     errorText.textContent = `Не удалось получить ответ от ИИ [${msg}].`;
                 }
