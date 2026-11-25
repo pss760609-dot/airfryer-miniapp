@@ -311,9 +311,12 @@
                 </div>
 
                 <!-- Сообщение об ошибке ИИ -->
-                <div id="ai-error-box" class="hidden surface-card rounded-2xl p-4 border-rose-500/40 space-y-2">
+                <div id="ai-error-box" class="hidden surface-card rounded-2xl p-4 border-rose-500/40 space-y-2.5">
                     <div class="text-xs font-bold text-rose-400">Не удалось связаться с ИИ-Шефом</div>
                     <p id="ai-error-text" class="text-xs text-hint leading-relaxed"></p>
+                    <button type="button" onclick="fallbackSearchFromAi()" class="w-full surface-card py-2 px-3 rounded-xl text-xs font-bold text-orange-400 active:scale-95 transition">
+                        🔍 Найти похожие среди 550+ рецептов в базе
+                    </button>
                 </div>
 
                 <!-- Сгенерированные карточки рецептов -->
@@ -2149,25 +2152,25 @@
             }
         }
 
-        async function fetchWithExponentialBackoff(url, options, maxRetries = 3) {
-            let delay = 1000;
-            for (let attempt = 0; attempt <= maxRetries; attempt++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (response.ok) {
-                        return response;
-                    }
-                    if ((response.status === 429 || response.status >= 500) && attempt < maxRetries) {
-                        await new Promise(res => setTimeout(res, delay));
-                        delay *= 2;
-                        continue;
-                    }
-                    return response;
-                } catch (err) {
-                    if (attempt === maxRetries) throw err;
-                    await new Promise(res => setTimeout(res, delay));
-                    delay *= 2;
-                }
+        function fallbackSearchFromAi() {
+            const input = document.getElementById('ai-prompt-input');
+            const q = (input && input.value ? input.value : '').trim();
+            closeAiModal();
+            if (q) {
+                setSearchMode('name');
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) searchInput.value = q;
+                handleSearchInput(q);
+            }
+        }
+
+        async function fetchWithTimeout(url, options, timeoutMs = 10000) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                return await fetch(url, { ...options, signal: controller.signal });
+            } finally {
+                clearTimeout(timer);
             }
         }
 
@@ -2188,83 +2191,58 @@
             generateBtn.disabled = true;
             generateBtn.classList.add('opacity-60');
 
-            const systemPrompt = `Ты опытный шеф-повар, специализирующийся на приготовлении блюд в аэрогриле (Air Fryer).
-Придумай ровно 3 разнообразных, реалистичных и вкусных рецепта строго для аэрогриля под запрос пользователя на русском языке.
-Указывай точную температуру (обычно 160–200°C), реальное время готовки в минутах для стандартной чаши аэрогриля, а также точное КБЖУ на 100 г готового блюда (kcal, protein, fat, carbs).
-Для каждого ингредиента по возможности укажи категорию замены из списка: сметана, масло, сыр, мука, сахар, яйцо, творог, чеснок, панировочные сухари, яблоки (или пустую строку).`;
-
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                systemInstruction: {
-                    parts: [{ text: systemPrompt }]
-                },
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "ARRAY",
-                        items: {
-                            type: "OBJECT",
-                            properties: {
-                                title: { type: "STRING" },
-                                emoji: { type: "STRING" },
-                                temp: { type: "INTEGER" },
-                                time: { type: "INTEGER" },
-                                baseServings: { type: "INTEGER" },
-                                calories: { type: "STRING" },
-                                kcal: { type: "NUMBER" },
-                                protein: { type: "NUMBER" },
-                                fat: { type: "NUMBER" },
-                                carbs: { type: "NUMBER" },
-                                keywords: {
-                                    type: "ARRAY",
-                                    items: { type: "STRING" }
-                                },
-                                ingredients: {
-                                    type: "ARRAY",
-                                    items: {
-                                        type: "OBJECT",
-                                        properties: {
-                                            name: { type: "STRING" },
-                                            amount: { type: "NUMBER" },
-                                            unit: { type: "STRING" },
-                                            category: { type: "STRING" }
-                                        },
-                                        required: ["name", "amount", "unit"]
-                                    }
-                                },
-                                steps: {
-                                    type: "ARRAY",
-                                    items: { type: "STRING" }
-                                }
-                            },
-                            required: ["title", "emoji", "temp", "time", "baseServings", "calories", "kcal", "protein", "fat", "carbs", "ingredients", "steps"]
-                        }
-                    }
-                }
-            };
-
-            const isProxy = Boolean(AI_PROXY_URL);
-            const apiUrl = isProxy
-                ? AI_PROXY_URL
-                : `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-
-            const requestHeaders = { 'Content-Type': 'application/json' };
             const currentTgUserId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id
                 ? String(tg.initDataUnsafe.user.id)
                 : '';
             const currentTgInitData = tg && tg.initData ? String(tg.initData) : '';
 
-            if (isProxy) {
-                if (currentTgUserId) requestHeaders['X-Tg-User-Id'] = currentTgUserId;
-                if (currentTgInitData) requestHeaders['X-Tg-Init-Data'] = currentTgInitData;
+            let response = null;
+            let lastErr = null;
+
+            // 1. Пробуем основной быстрый прокси Cloudflare (таймаут 10 сек)
+            if (AI_PROXY_URL) {
+                try {
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (currentTgUserId) headers['X-Tg-User-Id'] = currentTgUserId;
+                    if (currentTgInitData) headers['X-Tg-Init-Data'] = currentTgInitData;
+
+                    response = await fetchWithTimeout(AI_PROXY_URL, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({ query: userQuery })
+                    }, 10000);
+                } catch (err) {
+                    lastErr = err;
+                    response = null;
+                }
+            }
+
+            // 2. Если Cloudflare недоступен/замедлен провайдером (часто в РФ без VPN) — идём через Google Apps Script
+            if ((!response || !response.ok) && ANALYTICS_WEBHOOK_URL) {
+                try {
+                    const gasResponse = await fetchWithTimeout(ANALYTICS_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: 'ai_chef',
+                            query: userQuery,
+                            userId: currentTgUserId
+                        })
+                    }, 18000);
+
+                    if (gasResponse && gasResponse.ok) {
+                        response = gasResponse;
+                        lastErr = null;
+                    }
+                } catch (gasErr) {
+                    if (!lastErr) lastErr = gasErr;
+                }
             }
 
             try {
-                const response = await fetchWithExponentialBackoff(apiUrl, {
-                    method: 'POST',
-                    headers: requestHeaders,
-                    body: JSON.stringify(isProxy ? { query: userQuery } : payload)
-                });
+                if (!response) {
+                    throw lastErr || new Error('TIMEOUT');
+                }
 
                 if (response.status === 403) {
                     throw new Error('ACCESS_DENIED');
@@ -2275,10 +2253,15 @@
                 }
 
                 if (!response.ok) {
-                    throw new Error(`HTTP_${response.status}`);
+                    const errBody = await response.text().catch(() => '');
+                    throw new Error(`HTTP_${response.status}:${errBody.slice(0, 120)}`);
                 }
 
                 const result = await response.json();
+                if (result && result.error) {
+                    throw new Error(`API_ERR:${result.error.message || JSON.stringify(result.error)}`);
+                }
+
                 const rawText = result?.candidates?.[0]?.content?.parts?.[0]?.text || '';
                 const cleanedJson = rawText
                     .replace(/^```json\s*/i, '')
@@ -2362,12 +2345,17 @@
                 trackEvent('ai_generate', userQuery);
             } catch (err) {
                 haptic('error');
-                if (err && err.message === 'ACCESS_DENIED') {
+                const msg = err && err.message ? err.message : '';
+                if (err && err.name === 'AbortError' || msg === 'TIMEOUT') {
+                    errorText.textContent = 'Сервер ИИ не ответил за 10 секунд — в РФ провайдеры часто блокируют домен workers.dev без VPN. Включи VPN или добавь запасной обработчик в свой Google Apps Script.';
+                } else if (msg === 'ACCESS_DENIED') {
                     errorText.textContent = 'Запрос отклонён защитой сервера. Открой приложение через официального бота в Telegram.';
-                } else if (err && err.message === 'RATE_LIMIT') {
+                } else if (msg === 'RATE_LIMIT') {
                     errorText.textContent = 'Слишком много запросов подряд (лимит — 10 рецептов в минуту). Подожди минуту и попробуй снова.';
+                } else if (msg.startsWith('HTTP_') || msg.startsWith('API_ERR:')) {
+                    errorText.textContent = `Ошибка ответа от Gemini (${msg}). Проверь, что в настройках прокси сохранён правильный GEMINI_API_KEY.`;
                 } else {
-                    errorText.textContent = 'Проверь интернет-соединение или настройки прокси. Вся офлайн-база из 550+ рецептов продолжает работать без ограничений.';
+                    errorText.textContent = 'Не удалось подключиться к ИИ (возможно, заблокирован workers.dev без VPN). Попробуй включить VPN или найди блюдо в офлайн-базе.';
                 }
                 errorBox.classList.remove('hidden');
             } finally {
@@ -2382,67 +2370,93 @@
         // =========================================================================
         function startTimer() {
             if (state.timerRunning) return;
+
             if (state.timerRemainingSec <= 0) {
                 state.timerRemainingSec = state.timerTotalSec;
                 state.shakeNotified = false;
             }
 
-            haptic('medium');
             state.timerRunning = true;
+            haptic('medium');
 
             const toggleBtn = document.getElementById('timer-toggle-btn');
             if (toggleBtn) toggleBtn.textContent = 'Пауза';
 
-            const halfwaySec = Math.floor(state.timerTotalSec / 2);
-
             state.timerInterval = setInterval(() => {
-                state.timerRemainingSec = Math.max(0, state.timerRemainingSec - 1);
+                state.timerRemainingSec -= 1;
 
                 const displayEl = document.getElementById('timer-display');
-                if (displayEl) displayEl.textContent = formatTimer(state.timerRemainingSec);
-
-                if (!state.shakeNotified && halfwaySec > 15 && state.timerRemainingSec === halfwaySec) {
-                    state.shakeNotified = true;
-                    playBeepSound(2);
-                    haptic('warning');
-                    const badge = document.getElementById('timer-halfway-badge');
-                    if (badge) badge.classList.remove('hidden');
-                    showToast('🔄 Половина времени! Встряхни корзину аэрогриля');
+                if (displayEl) {
+                    displayEl.textContent = formatTimer(Math.max(0, state.timerRemainingSec));
                 }
 
+                // Напоминание встряхнуть корзину на половине времени (для блюд от 4 минут)
+                const halfTime = Math.floor(state.timerTotalSec / 2);
+                if (
+                    !state.shakeNotified &&
+                    state.timerTotalSec >= 240 &&
+                    state.timerRemainingSec <= halfTime &&
+                    state.timerRemainingSec > 0
+                ) {
+                    state.shakeNotified = true;
+                    const badgeEl = document.getElementById('timer-halfway-badge');
+                    if (badgeEl) badgeEl.classList.remove('hidden');
+                    haptic('warning');
+                    playBeepSound(2);
+                    showToast('🔄 Половина времени! Пора встряхнуть корзину');
+                }
+
+                // Завершение таймера
                 if (state.timerRemainingSec <= 0) {
+                    state.timerRemainingSec = 0;
                     stopTimer(false);
-                    playBeepSound(3);
                     haptic('success');
-                    showToast('🎉 Готово! Блюдо в аэрогриле приготовилось');
+                    playBeepSound(3);
+                    showToast('🔥 Готово! Блюдо в аэрогриле приготовилось');
+                    renderModalBody();
                 }
             }, 1000);
         }
 
-        function stopTimer(showMsg) {
+        function stopTimer(notifyUser = true) {
             if (state.timerInterval) {
                 clearInterval(state.timerInterval);
                 state.timerInterval = null;
             }
             state.timerRunning = false;
+
             const toggleBtn = document.getElementById('timer-toggle-btn');
             if (toggleBtn) toggleBtn.textContent = 'Старт';
-            if (showMsg) {
+
+            if (notifyUser) {
                 haptic('light');
                 showToast('Таймер на паузе');
             }
         }
 
         function resetTimer() {
-            haptic('light');
             stopTimer(false);
             state.timerRemainingSec = state.timerTotalSec;
             state.shakeNotified = false;
-            const displayEl = document.getElementById('timer-display');
-            const badge = document.getElementById('timer-halfway-badge');
-            if (displayEl) displayEl.textContent = formatTimer(state.timerRemainingSec);
-            if (badge) badge.classList.add('hidden');
-            showToast('Таймер сброшен');
+            haptic('light');
+            renderModalBody();
+        }
+
+        function copyTextFallback(text) {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                return true;
+            } catch (e) {
+                return false;
+            }
         }
 
         function shareShoppingList() {
@@ -2453,23 +2467,26 @@
             const factor = state.servings / (recipe.baseServings || 2);
             const macrosData = getRecipeMacros(recipe, true);
 
-            const activeLines = [];
+            const lines = [];
             recipe.ingredients.forEach((ing, idx) => {
                 const mod = state.ingMods[idx];
                 if (mod && mod.status === 'removed') return;
-                const label = mod && mod.status === 'replaced' ? `${mod.replacement} (вместо: ${ing.name})` : ing.name;
+                const itemName = mod && mod.status === 'replaced' ? mod.replacement : ing.name;
                 const amountStr = `${formatAmount(ing.amount, factor)} ${ing.unit}`.trim();
-                activeLines.push(`• ${label} — ${amountStr}`);
+                lines.push(`• ${itemName}${amountStr ? ` — ${amountStr}` : ''}`);
             });
 
             const shareText = [
                 `${recipe.emoji} ${recipe.title}`,
-                `🌡 ${recipe.temp}°C · ⏱ ${recipe.time} мин · 🍽 ${state.servings} порц.`,
-                `📊 КБЖУ на 100 г: ${macrosData.kcal} ккал (Б ${macrosData.p} / Ж ${macrosData.f} / У ${macrosData.c})`,
-                '',
-                '🛒 Список продуктов:',
-                ...activeLines
+                `🌡 ${recipe.temp}°C · ⏱ ${recipe.time} мин · 🍽 Порций: ${state.servings}`,
+                `📊 КБЖУ (на 100 г): ${macrosData.kcal} ккал · Б ${macrosData.p} г / Ж ${macrosData.f} г / У ${macrosData.c} г`,
+                ``,
+                `🛒 Список продуктов:`,
+                ...lines
             ].join('\n');
+
+            copyTextFallback(shareText);
+            trackEvent('share_list', recipe.title);
 
             try {
                 if (tg && typeof tg.openTelegramLink === 'function') {
@@ -2479,77 +2496,61 @@
                 }
             } catch (e) {}
 
-            // Резервное копирование в буфер обмена для браузера
-            try {
-                const tempArea = document.createElement('textarea');
-                tempArea.value = shareText;
-                tempArea.style.position = 'fixed';
-                tempArea.style.opacity = '0';
-                document.body.appendChild(tempArea);
-                tempArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempArea);
-                showToast('📋 Список продуктов скопирован в буфер обмена');
-            } catch (e) {
-                showToast('Не удалось скопировать список');
-            }
+            showToast('📋 Список продуктов и КБЖУ скопированы!');
         }
 
-        // =========================================================================
-        // 9. ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ МЕНЮ ДЛЯ СМАРТФОНА И МЫШИ
-        // =========================================================================
-        function enableHorizontalScrollEnhancements() {
-            const containers = document.querySelectorAll('.horizontal-scroll');
-            containers.forEach(el => {
-                el.addEventListener('wheel', e => {
-                    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-                        e.preventDefault();
-                        el.scrollLeft += e.deltaY;
-                    }
-                }, { passive: false });
-
+        // Плавная прокрутка горизонтальных меню мышью на компьютере
+        function enableHorizontalDragScroll() {
+            const sliders = document.querySelectorAll('.horizontal-scroll');
+            sliders.forEach(slider => {
                 let isDown = false;
                 let startX = 0;
                 let scrollLeft = 0;
 
-                el.addEventListener('mousedown', e => {
+                slider.addEventListener('mousedown', (e) => {
                     isDown = true;
-                    el.classList.add('grabbing');
-                    startX = e.pageX - el.offsetLeft;
-                    scrollLeft = el.scrollLeft;
+                    slider.classList.add('grabbing');
+                    startX = e.pageX - slider.offsetLeft;
+                    scrollLeft = slider.scrollLeft;
                 });
 
-                el.addEventListener('mouseleave', () => {
+                slider.addEventListener('mouseleave', () => {
                     isDown = false;
-                    el.classList.remove('grabbing');
+                    slider.classList.remove('grabbing');
                 });
 
-                el.addEventListener('mouseup', () => {
+                slider.addEventListener('mouseup', () => {
                     isDown = false;
-                    el.classList.remove('grabbing');
+                    slider.classList.remove('grabbing');
                 });
 
-                el.addEventListener('mousemove', e => {
+                slider.addEventListener('mousemove', (e) => {
                     if (!isDown) return;
                     e.preventDefault();
-                    const x = e.pageX - el.offsetLeft;
+                    const x = e.pageX - slider.offsetLeft;
                     const walk = (x - startX) * 1.4;
-                    el.scrollLeft = scrollLeft - walk;
+                    slider.scrollLeft = scrollLeft - walk;
                 });
             });
         }
 
         // =========================================================================
-        // 10. ЗАПУСК ПРИЛОЖЕНИЯ ПОСЛЕ ЗАГРУЗКИ ОКНА
+        // 9. ЗАПУСК ПРИЛОЖЕНИЯ
         // =========================================================================
-        window.onload = function () {
+        function initApp() {
             initTelegram();
             updateFavoritesBadge();
             renderMoodChips();
             renderRecipesFeed();
-            enableHorizontalScrollEnhancements();
-            trackEvent('app_open', `recipes_total:${RECIPES.length}`);
-        };
+            enableHorizontalDragScroll();
+            trackEvent('app_open', `Всего рецептов: ${RECIPES.length}`);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
     </script>
 </body>
 </html>
