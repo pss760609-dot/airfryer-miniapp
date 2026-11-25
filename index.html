@@ -550,6 +550,7 @@
                 time: 22,
                 baseServings: 2,
                 calories: '245 ккал',
+                macros: { kcal: 245, p: 23, f: 16, c: 2 },
                 keywords: ['курица', 'крылья', 'крылышки', 'острое', 'под пиво', 'баффало'],
                 ingredients: [
                     { name: 'Куриные крылышки', amount: 600, unit: 'г', category: '' },
@@ -573,6 +574,7 @@
                 time: 18,
                 baseServings: 2,
                 calories: '140 ккал',
+                macros: { kcal: 140, p: 3, f: 5, c: 21 },
                 keywords: ['картошка', 'картофель', 'фри', 'по-деревенски', 'гарнир'],
                 ingredients: [
                     { name: 'Картофель', amount: 500, unit: 'г', category: '' },
@@ -596,6 +598,7 @@
                 time: 25,
                 baseServings: 4,
                 calories: '185 ккал',
+                macros: { kcal: 185, p: 5, f: 4, c: 32 },
                 keywords: ['шарлотка', 'яблочный пирог', 'яблоки', 'к чаю', 'десерт', 'выпечка'],
                 ingredients: [
                     { name: 'Яблоки кисло-сладкие', amount: 250, unit: 'г', category: 'яблоки' },
@@ -619,6 +622,7 @@
                 time: 22,
                 baseServings: 3,
                 calories: '155 ккал',
+                macros: { kcal: 155, p: 17, f: 5, c: 10 },
                 keywords: ['запеканка', 'творожная запеканка', 'творог', 'завтрак', 'пп'],
                 ingredients: [
                     { name: 'Творог 5%', amount: 400, unit: 'г', category: 'творог' },
@@ -642,6 +646,7 @@
                 time: 12,
                 baseServings: 2,
                 calories: '210 ккал',
+                macros: { kcal: 210, p: 21, f: 14, c: 0 },
                 keywords: ['рыба', 'лосось', 'семга', 'форель', 'стейк', 'ужин', 'пп'],
                 ingredients: [
                     { name: 'Стейк лосося или форели', amount: 350, unit: 'г', category: '' },
@@ -664,6 +669,7 @@
                 time: 13,
                 baseServings: 2,
                 calories: '275 ккал',
+                macros: { kcal: 275, p: 12, f: 14, c: 25 },
                 keywords: ['пельмени', 'замороженные', 'полуфабрикаты', 'быстро', 'под пиво'],
                 ingredients: [
                     { name: 'Пельмени замороженные', amount: 350, unit: 'г', category: '' },
@@ -694,6 +700,7 @@
                     time: item.time,
                     baseServings: item.baseServings || 2,
                     calories: item.calories,
+                    macros: item.macros || null,
                     keywords: item.keywords,
                     ingredients: item.ingredients,
                     steps: item.steps
@@ -702,14 +709,14 @@
 
             // 1. Курица и индейка (110+ вариантов)
             const poultryCuts = [
-                { name: 'Куриное филе', emoji: '🍗', temp: 185, time: 15, cal: '165 ккал', fast: true },
-                { name: 'Куриные бедра без кости', emoji: '🍗', temp: 190, time: 18, cal: '215 ккал', fast: false },
-                { name: 'Куриные голени', emoji: '🍗', temp: 195, time: 22, cal: '210 ккал', fast: false },
-                { name: 'Стрипсы из куриной грудки', emoji: '🍗', temp: 195, time: 12, cal: '185 ккал', fast: true },
-                { name: 'Филе индейки медальонами', emoji: '🦃', temp: 185, time: 14, cal: '150 ккал', fast: true },
-                { name: 'Куриные сердечки на шпажках', emoji: '🍢', temp: 190, time: 13, cal: '175 ккал', fast: true },
-                { name: 'Куриные рулетики с начинкой', emoji: '🌯', temp: 185, time: 19, cal: '205 ккал', fast: false },
-                { name: 'Наггетсы домашние', emoji: '🍘', temp: 195, time: 12, cal: '210 ккал', fast: true }
+                { name: 'Куриное филе', emoji: '🍗', temp: 185, time: 15, cal: '165 ккал', macros: { kcal: 165, p: 24, f: 6, c: 3 }, fast: true },
+                { name: 'Куриные бедра без кости', emoji: '🍗', temp: 190, time: 18, cal: '215 ккал', macros: { kcal: 215, p: 20, f: 14, c: 2 }, fast: false },
+                { name: 'Куриные голени', emoji: '🍗', temp: 195, time: 22, cal: '210 ккал', macros: { kcal: 210, p: 21, f: 13, c: 2 }, fast: false },
+                { name: 'Стрипсы из куриной грудки', emoji: '🍗', temp: 195, time: 12, cal: '185 ккал', macros: { kcal: 185, p: 22, f: 7, c: 8 }, fast: true },
+                { name: 'Филе индейки медальонами', emoji: '🦃', temp: 185, time: 14, cal: '150 ккал', macros: { kcal: 150, p: 25, f: 4, c: 2 }, fast: true },
+                { name: 'Куриные сердечки на шпажках', emoji: '🍢', temp: 190, time: 13, cal: '175 ккал', macros: { kcal: 175, p: 18, f: 11, c: 1 }, fast: true },
+                { name: 'Куриные рулетики с начинкой', emoji: '🌯', temp: 185, time: 19, cal: '205 ккал', macros: { kcal: 205, p: 22, f: 11, c: 4 }, fast: false },
+                { name: 'Наггетсы домашние', emoji: '🍘', temp: 195, time: 12, cal: '210 ккал', macros: { kcal: 210, p: 19, f: 9, c: 13 }, fast: true }
             ];
             const poultryMarinades = [
                 { suffix: 'в медово-горчичном соусе', extraIng: { name: 'Мёд и зернистая горчица', amount: 2, unit: 'ст. л.', category: '' }, mood: 'party', kw: 'мед горчица глазурь' },
@@ -739,6 +746,7 @@
                         temp: cut.temp,
                         time: cut.time,
                         calories: cut.cal,
+                        macros: cut.macros,
                         keywords: ['курица', 'птица', 'мясо', ...cut.name.toLowerCase().split(' '), ...mar.kw.split(' ')],
                         ingredients: [
                             { name: cut.name, amount: 450, unit: 'г', category: '' },
@@ -807,6 +815,7 @@
                     time: idx % 3 === 0 ? 22 : 25,
                     baseServings: 4,
                     calories: isPp ? '135 ккал' : '185 ккал',
+                    macros: isPp ? { kcal: 135, p: 6, f: 3, c: 21 } : { kcal: 185, p: 5, f: 4, c: 32 },
                     keywords: ['шарлотка', 'пирог', 'яблоки', 'выпечка', 'десерт', 'к чаю', ...title.toLowerCase().split(' ')],
                     ingredients: [
                         { name: 'Яблоки спелые', amount: 250, unit: 'г', category: 'яблоки' },
@@ -848,6 +857,8 @@
             ];
 
             casseroles.forEach(cas => {
+                const kcalNum = parseInt(cas.cal, 10) || 155;
+                const isSweet = cas.mood === 'dessert' || cas.mood === 'breakfast';
                 addRecipe({
                     title: cas.title,
                     emoji: cas.emoji,
@@ -856,6 +867,9 @@
                     time: 22,
                     baseServings: 3,
                     calories: cas.cal,
+                    macros: isSweet
+                        ? { kcal: kcalNum, p: 15, f: 5, c: 12 }
+                        : { kcal: kcalNum, p: 14, f: 7, c: 9 },
                     keywords: ['запеканка', 'в форме', ...cas.title.toLowerCase().split(' ')],
                     ingredients: [
                         { name: cas.ing1, amount: 350, unit: 'г', category: cas.ing1.toLowerCase().includes('творог') ? 'творог' : '' },
@@ -874,16 +888,16 @@
 
             // 4. Мясо, котлеты, шашлыки, люля (90 вариантов)
             const meatItems = [
-                { name: 'Свиная шея шашлыком', emoji: '🍢', temp: 195, time: 20, cal: '280 ккал' },
-                { name: 'Свиные рёбрышки', emoji: '🍖', temp: 185, time: 25, cal: '295 ккал' },
-                { name: 'Стейк из свиной корейки', emoji: '🥩', temp: 195, time: 16, cal: '255 ккал' },
-                { name: 'Домашние котлеты из фарша', emoji: '🍔', temp: 185, time: 16, cal: '220 ккал' },
-                { name: 'Люля-кебаб на шпажках', emoji: '🍢', temp: 195, time: 15, cal: '235 ккал' },
-                { name: 'Тефтели в сливочно-томатном соусе', emoji: '🧆', temp: 180, time: 18, cal: '195 ккал' },
-                { name: 'Говяжьи медальоны', emoji: '🥩', temp: 200, time: 12, cal: '215 ккал' },
-                { name: 'Купаты и колбаски для жарки', emoji: '🌭', temp: 190, time: 15, cal: '265 ккал' },
-                { name: 'Бифштексы рубленые с сыром', emoji: '🥩', temp: 190, time: 16, cal: '240 ккал' },
-                { name: 'Фрикадельки нежные для детей', emoji: '🧆', temp: 180, time: 14, cal: '175 ккал' }
+                { name: 'Свиная шея шашлыком', emoji: '🍢', temp: 195, time: 20, cal: '280 ккал', macros: { kcal: 280, p: 18, f: 22, c: 2 } },
+                { name: 'Свиные рёбрышки', emoji: '🍖', temp: 185, time: 25, cal: '295 ккал', macros: { kcal: 295, p: 17, f: 24, c: 3 } },
+                { name: 'Стейк из свиной корейки', emoji: '🥩', temp: 195, time: 16, cal: '255 ккал', macros: { kcal: 255, p: 21, f: 18, c: 2 } },
+                { name: 'Домашние котлеты из фарша', emoji: '🍔', temp: 185, time: 16, cal: '220 ккал', macros: { kcal: 220, p: 17, f: 14, c: 6 } },
+                { name: 'Люля-кебаб на шпажках', emoji: '🍢', temp: 195, time: 15, cal: '235 ккал', macros: { kcal: 235, p: 19, f: 16, c: 3 } },
+                { name: 'Тефтели в сливочно-томатном соусе', emoji: '🧆', temp: 180, time: 18, cal: '195 ккал', macros: { kcal: 195, p: 15, f: 11, c: 9 } },
+                { name: 'Говяжьи медальоны', emoji: '🥩', temp: 200, time: 12, cal: '215 ккал', macros: { kcal: 215, p: 24, f: 13, c: 1 } },
+                { name: 'Купаты и колбаски для жарки', emoji: '🌭', temp: 190, time: 15, cal: '265 ккал', macros: { kcal: 265, p: 14, f: 22, c: 2 } },
+                { name: 'Бифштексы рубленые с сыром', emoji: '🥩', temp: 190, time: 16, cal: '240 ккал', macros: { kcal: 240, p: 21, f: 16, c: 2 } },
+                { name: 'Фрикадельки нежные для детей', emoji: '🧆', temp: 180, time: 14, cal: '175 ккал', macros: { kcal: 175, p: 17, f: 9, c: 6 } }
             ];
             const meatStyles = [
                 { style: 'по-кавказски с луком и кориандром', kw: 'шашлык лук кавказ' },
@@ -907,6 +921,7 @@
                         temp: m.temp,
                         time: m.time,
                         calories: m.cal,
+                        macros: m.macros,
                         keywords: ['мясо', 'свинина', 'говядина', 'фарш', ...m.name.toLowerCase().split(' '), ...st.kw.split(' ')],
                         ingredients: [
                             { name: m.name, amount: 450, unit: 'г', category: '' },
@@ -925,16 +940,16 @@
 
             // 5. Рыба и морепродукты (60 вариантов)
             const fishTypes = [
-                { name: 'Филе трески', emoji: '🐟', temp: 185, time: 13, cal: '115 ккал' },
-                { name: 'Стейк сёмги', emoji: '🐟', temp: 190, time: 12, cal: '215 ккал' },
-                { name: 'Филе минтая', emoji: '🐟', temp: 185, time: 12, cal: '105 ккал' },
-                { name: 'Скумбрия целиком или филе', emoji: '🐟', temp: 190, time: 16, cal: '225 ккал' },
-                { name: 'Королевские креветки', emoji: '🦐', temp: 195, time: 8, cal: '110 ккал' },
-                { name: 'Кальмары кольцами', emoji: '🦑', temp: 200, time: 7, cal: '120 ккал' },
-                { name: 'Горбуша сочная', emoji: '🐟', temp: 185, time: 14, cal: '155 ккал' },
-                { name: 'Дорадо или сибас', emoji: '🐟', temp: 190, time: 16, cal: '145 ккал' },
-                { name: 'Рыбные котлеты нежные', emoji: '🐟', temp: 185, time: 14, cal: '140 ккал' },
-                { name: 'Филе тилапии', emoji: '🐟', temp: 185, time: 11, cal: '115 ккал' }
+                { name: 'Филе трески', emoji: '🐟', temp: 185, time: 13, cal: '115 ккал', macros: { kcal: 115, p: 19, f: 4, c: 1 } },
+                { name: 'Стейк сёмги', emoji: '🐟', temp: 190, time: 12, cal: '215 ккал', macros: { kcal: 215, p: 21, f: 14, c: 0 } },
+                { name: 'Филе минтая', emoji: '🐟', temp: 185, time: 12, cal: '105 ккал', macros: { kcal: 105, p: 18, f: 3, c: 1 } },
+                { name: 'Скумбрия целиком или филе', emoji: '🐟', temp: 190, time: 16, cal: '225 ккал', macros: { kcal: 225, p: 19, f: 16, c: 0 } },
+                { name: 'Королевские креветки', emoji: '🦐', temp: 195, time: 8, cal: '110 ккал', macros: { kcal: 110, p: 20, f: 3, c: 1 } },
+                { name: 'Кальмары кольцами', emoji: '🦑', temp: 200, time: 7, cal: '120 ккал', macros: { kcal: 120, p: 19, f: 4, c: 2 } },
+                { name: 'Горбуша сочная', emoji: '🐟', temp: 185, time: 14, cal: '155 ккал', macros: { kcal: 155, p: 21, f: 7, c: 1 } },
+                { name: 'Дорадо или сибас', emoji: '🐟', temp: 190, time: 16, cal: '145 ккал', macros: { kcal: 145, p: 20, f: 7, c: 0 } },
+                { name: 'Рыбные котлеты нежные', emoji: '🐟', temp: 185, time: 14, cal: '140 ккал', macros: { kcal: 140, p: 16, f: 6, c: 5 } },
+                { name: 'Филе тилапии', emoji: '🐟', temp: 185, time: 11, cal: '115 ккал', macros: { kcal: 115, p: 20, f: 4, c: 0 } }
             ];
             const fishSauces = [
                 { name: 'с лимоном и оливковым маслом', kw: 'лимон пп' },
@@ -955,6 +970,7 @@
                         temp: f.temp,
                         time: f.time,
                         calories: f.cal,
+                        macros: f.macros,
                         keywords: ['рыба', 'морепродукты', ...f.name.toLowerCase().split(' '), ...fs.kw.split(' ')],
                         ingredients: [
                             { name: f.name, amount: 350, unit: 'г', category: '' },
@@ -973,23 +989,23 @@
 
             // 6. Картофель, овощи и грибы (85 вариантов)
             const veggiesList = [
-                { name: 'Картофель фри хрустящий', emoji: '🍟', temp: 195, time: 18, cal: '155 ккал', mood: 'crispy' },
-                { name: 'Батат фри сладкий', emoji: '🍠', temp: 190, time: 15, cal: '130 ккал', mood: 'pp' },
-                { name: 'Молодой картофель в мундире с укропом', emoji: '🥔', temp: 190, time: 20, cal: '125 ккал', mood: 'kids' },
-                { name: 'Картофельные дольки с сыром пармезан', emoji: '🥔', temp: 195, time: 18, cal: '175 ккал', mood: 'snack' },
-                { name: 'Кабачки кружочками с чесноком и сыром', emoji: '🥒', temp: 185, time: 12, cal: '85 ккал', mood: 'pp' },
-                { name: 'Шампиньоны фаршированные сыром и зеленью', emoji: '🍄', temp: 185, time: 13, cal: '110 ккал', mood: 'party' },
-                { name: 'Шампиньоны целые в соево-чесночном маринаде', emoji: '🍄', temp: 190, time: 12, cal: '75 ккал', mood: 'pp' },
-                { name: 'Баклажаны с помидорами и моцареллой', emoji: '🍆', temp: 185, time: 14, cal: '115 ккал', mood: 'pp' },
-                { name: 'Брокколи в чесночном масле с пармезаном', emoji: '🥦', temp: 180, time: 10, cal: '80 ккал', mood: 'pp' },
-                { name: 'Цветная капуста в хрустящей панировке', emoji: '🥬', temp: 190, time: 14, cal: '110 ккал', mood: 'crispy' },
-                { name: 'Овощи гриль ассорти (перец, кабачок, лук)', emoji: '🫑', temp: 190, time: 14, cal: '75 ккал', mood: 'pp' },
-                { name: 'Кукуруза початки со сливочным маслом', emoji: '🌽', temp: 190, time: 14, cal: '135 ккал', mood: 'kids' },
-                { name: 'Драники картофельные румяные без жарки', emoji: '🥞', temp: 190, time: 15, cal: '165 ккал', mood: 'breakfast' },
-                { name: 'Тыква дольками с мёдом и тимьяном', emoji: '🎃', temp: 185, time: 16, cal: '95 ккал', mood: 'pp' },
-                { name: 'Стручковая фасоль с чесноком и кунжутом', emoji: '🥗', temp: 185, time: 9, cal: '70 ккал', mood: 'pp' },
-                { name: 'Брюссельская капуста с беконом', emoji: '🥬', temp: 190, time: 14, cal: '145 ккал', mood: 'party' },
-                { name: 'Помидоры черри запечённые с фетой и базиликом', emoji: '🍅', temp: 185, time: 10, cal: '130 ккал', mood: 'party' }
+                { name: 'Картофель фри хрустящий', emoji: '🍟', temp: 195, time: 18, cal: '155 ккал', macros: { kcal: 155, p: 3, f: 6, c: 22 }, mood: 'crispy' },
+                { name: 'Батат фри сладкий', emoji: '🍠', temp: 190, time: 15, cal: '130 ккал', macros: { kcal: 130, p: 2, f: 4, c: 21 }, mood: 'pp' },
+                { name: 'Молодой картофель в мундире с укропом', emoji: '🥔', temp: 190, time: 20, cal: '125 ккал', macros: { kcal: 125, p: 3, f: 4, c: 19 }, mood: 'kids' },
+                { name: 'Картофельные дольки с сыром пармезан', emoji: '🥔', temp: 195, time: 18, cal: '175 ккал', macros: { kcal: 175, p: 6, f: 7, c: 21 }, mood: 'snack' },
+                { name: 'Кабачки кружочками с чесноком и сыром', emoji: '🥒', temp: 185, time: 12, cal: '85 ккал', macros: { kcal: 85, p: 4, f: 5, c: 6 }, mood: 'pp' },
+                { name: 'Шампиньоны фаршированные сыром и зеленью', emoji: '🍄', temp: 185, time: 13, cal: '110 ккал', macros: { kcal: 110, p: 7, f: 7, c: 4 }, mood: 'party' },
+                { name: 'Шампиньоны целые в соево-чесночном маринаде', emoji: '🍄', temp: 190, time: 12, cal: '75 ккал', macros: { kcal: 75, p: 5, f: 4, c: 4 }, mood: 'pp' },
+                { name: 'Баклажаны с помидорами и моцареллой', emoji: '🍆', temp: 185, time: 14, cal: '115 ккал', macros: { kcal: 115, p: 5, f: 7, c: 7 }, mood: 'pp' },
+                { name: 'Брокколи в чесночном масле с пармезаном', emoji: '🥦', temp: 180, time: 10, cal: '80 ккал', macros: { kcal: 80, p: 5, f: 4, c: 6 }, mood: 'pp' },
+                { name: 'Цветная капуста в хрустящей панировке', emoji: '🥬', temp: 190, time: 14, cal: '110 ккал', macros: { kcal: 110, p: 4, f: 5, c: 12 }, mood: 'crispy' },
+                { name: 'Овощи гриль ассорти (перец, кабачок, лук)', emoji: '🫑', temp: 190, time: 14, cal: '75 ккал', macros: { kcal: 75, p: 2, f: 4, c: 8 }, mood: 'pp' },
+                { name: 'Кукуруза початки со сливочным маслом', emoji: '🌽', temp: 190, time: 14, cal: '135 ккал', macros: { kcal: 135, p: 4, f: 5, c: 19 }, mood: 'kids' },
+                { name: 'Драники картофельные румяные без жарки', emoji: '🥞', temp: 190, time: 15, cal: '165 ккал', macros: { kcal: 165, p: 4, f: 6, c: 23 }, mood: 'breakfast' },
+                { name: 'Тыква дольками с мёдом и тимьяном', emoji: '🎃', temp: 185, time: 16, cal: '95 ккал', macros: { kcal: 95, p: 2, f: 3, c: 15 }, mood: 'pp' },
+                { name: 'Стручковая фасоль с чесноком и кунжутом', emoji: '🥗', temp: 185, time: 9, cal: '70 ккал', macros: { kcal: 70, p: 3, f: 4, c: 6 }, mood: 'pp' },
+                { name: 'Брюссельская капуста с беконом', emoji: '🥬', temp: 190, time: 14, cal: '145 ккал', macros: { kcal: 145, p: 7, f: 10, c: 7 }, mood: 'party' },
+                { name: 'Помидоры черри запечённые с фетой и базиликом', emoji: '🍅', temp: 185, time: 10, cal: '130 ккал', macros: { kcal: 130, p: 6, f: 9, c: 6 }, mood: 'party' }
             ];
 
             const vegVariations = [
@@ -1010,6 +1026,7 @@
                         temp: v.temp,
                         time: v.time,
                         calories: v.cal,
+                        macros: v.macros,
                         keywords: ['овощи', 'гарнир', ...v.name.toLowerCase().split(' '), ...vv.kw.split(' ')],
                         ingredients: [
                             { name: v.name.split(' ')[0], amount: 400, unit: 'г', category: '' },
@@ -1028,26 +1045,26 @@
 
             // 7. Завтраки, сырники и выпечка к чаю (80 вариантов)
             const breakfastsAndBakery = [
-                { title: 'Сырники румяные без жарки в масле', emoji: '🥞', mood: 'breakfast', temp: 180, time: 14, cal: '175 ккал', kw: 'сырники творог завтрак' },
-                { title: 'Сырники с изюмом и ванилью', emoji: '🥞', mood: 'breakfast', temp: 180, time: 14, cal: '185 ккал', kw: 'сырники творог изюм' },
-                { title: 'ПП-сырники на рисовой муке без сахара', emoji: '🥞', mood: 'pp', temp: 180, time: 13, cal: '145 ккал', kw: 'сырники пп творог' },
-                { title: 'Горячие бутерброды с сыром, ветчиной и томатом', emoji: '🥪', mood: 'fast', temp: 190, time: 7, cal: '240 ккал', kw: 'бутерброды тосты хлеб сыр завтрак' },
-                { title: 'Яичница-глазунья в тосте с сыром за 8 минут', emoji: '🍳', mood: 'fast', temp: 180, time: 8, cal: '215 ккал', kw: 'яйца тост хлеб завтрак' },
-                { title: 'Омлет пышный с сыром, зеленью и помидорами', emoji: '🍳', mood: 'breakfast', temp: 170, time: 12, cal: '155 ккал', kw: 'омлет яйца сыр завтрак' },
-                { title: 'Сосиски в слоёном тесте за 12 минут', emoji: '🌭', mood: 'kids', temp: 185, time: 12, cal: '275 ккал', kw: 'сосиски слоеное тесто детям' },
-                { title: 'Круассаны из слоёного теста с шоколадом', emoji: '🥐', mood: 'dessert', temp: 180, time: 12, cal: '295 ккал', kw: 'круассаны слоеное тесто шоколад к чаю' },
-                { title: 'Слойки с яблоками и корицей за 12 минут', emoji: '🥐', mood: 'dessert', temp: 180, time: 12, cal: '235 ккал', kw: 'слойки яблоки слоеное тесто' },
-                { title: 'Хачапури по-аджарски ленивый из слоёного теста', emoji: '🫓', mood: 'breakfast', temp: 185, time: 14, cal: '265 ккал', kw: 'хачапури сыр яйцо тесто' },
-                { title: 'Банановые маффины с овсянкой к чаю', emoji: '🧁', mood: 'pp', temp: 170, time: 16, cal: '165 ккал', kw: 'маффины кексы банан овсянка' },
-                { title: 'Шоколадный кекс в кружке за 10 минут', emoji: '🧁', mood: 'fast', temp: 175, time: 10, cal: '245 ккал', kw: 'кекс шоколад десерт быстро' },
-                { title: 'Гренки сладкие с корицей и молоком', emoji: '🍞', mood: 'breakfast', temp: 185, time: 9, cal: '210 ккал', kw: 'гренки хлеб батон завтрак' },
-                { title: 'Пицца на тортилье или лаваше за 8 минут', emoji: '🍕', mood: 'fast', temp: 190, time: 8, cal: '220 ккал', kw: 'пицца лаваш тортилья сыр' },
-                { title: 'Шаурма хрустящая с курицей и овощами', emoji: '🌯', mood: 'fast', temp: 190, time: 8, cal: '215 ккал', kw: 'шаурма лаваш курица' },
-                { title: 'Яблоки запечённые с творогом, мёдом и орехами', emoji: '🍎', mood: 'pp', temp: 175, time: 15, cal: '125 ккал', kw: 'яблоки творог мед десерт пп' },
-                { title: 'Конвертики из лаваша с творогом и зеленью', emoji: '🥟', mood: 'breakfast', temp: 185, time: 10, cal: '185 ккал', kw: 'лаваш творог сыр перекус' },
-                { title: 'Творожные пончики без жарки в масле', emoji: '🍩', mood: 'kids', temp: 180, time: 12, cal: '195 ккал', kw: 'пончики творог детям к чаю' },
-                { title: 'Овсяноблин с сыром и ветчиной за 9 минут', emoji: '🥞', mood: 'pp', temp: 180, time: 9, cal: '175 ккал', kw: 'овсяноблин овсянка яйца завтрак' },
-                { title: 'Синнабоны быстрые из слоёного теста с корицей', emoji: '🍥', mood: 'dessert', temp: 175, time: 14, cal: '285 ккал', kw: 'синнабоны булочки корица тесто' }
+                { title: 'Сырники румяные без жарки в масле', emoji: '🥞', mood: 'breakfast', temp: 180, time: 14, cal: '175 ккал', macros: { kcal: 175, p: 16, f: 6, c: 14 }, kw: 'сырники творог завтрак' },
+                { title: 'Сырники с изюмом и ванилью', emoji: '🥞', mood: 'breakfast', temp: 180, time: 14, cal: '185 ккал', macros: { kcal: 185, p: 15, f: 6, c: 18 }, kw: 'сырники творог изюм' },
+                { title: 'ПП-сырники на рисовой муке без сахара', emoji: '🥞', mood: 'pp', temp: 180, time: 13, cal: '145 ккал', macros: { kcal: 145, p: 17, f: 4, c: 10 }, kw: 'сырники пп творог' },
+                { title: 'Горячие бутерброды с сыром, ветчиной и томатом', emoji: '🥪', mood: 'fast', temp: 190, time: 7, cal: '240 ккал', macros: { kcal: 240, p: 12, f: 11, c: 23 }, kw: 'бутерброды тосты хлеб сыр завтрак' },
+                { title: 'Яичница-глазунья в тосте с сыром за 8 минут', emoji: '🍳', mood: 'fast', temp: 180, time: 8, cal: '215 ккал', macros: { kcal: 215, p: 13, f: 11, c: 16 }, kw: 'яйца тост хлеб завтрак' },
+                { title: 'Омлет пышный с сыром, зеленью и помидорами', emoji: '🍳', mood: 'breakfast', temp: 170, time: 12, cal: '155 ккал', macros: { kcal: 155, p: 12, f: 11, c: 3 }, kw: 'омлет яйца сыр завтрак' },
+                { title: 'Сосиски в слоёном тесте за 12 минут', emoji: '🌭', mood: 'kids', temp: 185, time: 12, cal: '275 ккал', macros: { kcal: 275, p: 9, f: 17, c: 21 }, kw: 'сосиски слоеное тесто детям' },
+                { title: 'Круассаны из слоёного теста с шоколадом', emoji: '🥐', mood: 'dessert', temp: 180, time: 12, cal: '295 ккал', macros: { kcal: 295, p: 6, f: 16, c: 32 }, kw: 'круассаны слоеное тесто шоколад к чаю' },
+                { title: 'Слойки с яблоками и корицей за 12 минут', emoji: '🥐', mood: 'dessert', temp: 180, time: 12, cal: '235 ккал', macros: { kcal: 235, p: 5, f: 11, c: 29 }, kw: 'слойки яблоки слоеное тесто' },
+                { title: 'Хачапури по-аджарски ленивый из слоёного теста', emoji: '🫓', mood: 'breakfast', temp: 185, time: 14, cal: '265 ккал', macros: { kcal: 265, p: 13, f: 15, c: 19 }, kw: 'хачапури сыр яйцо тесто' },
+                { title: 'Банановые маффины с овсянкой к чаю', emoji: '🧁', mood: 'pp', temp: 170, time: 16, cal: '165 ккал', macros: { kcal: 165, p: 6, f: 4, c: 26 }, kw: 'маффины кексы банан овсянка' },
+                { title: 'Шоколадный кекс в кружке за 10 минут', emoji: '🧁', mood: 'fast', temp: 175, time: 10, cal: '245 ккал', macros: { kcal: 245, p: 7, f: 10, c: 32 }, kw: 'кекс шоколад десерт быстро' },
+                { title: 'Гренки сладкие с корицей и молоком', emoji: '🍞', mood: 'breakfast', temp: 185, time: 9, cal: '210 ккал', macros: { kcal: 210, p: 7, f: 6, c: 32 }, kw: 'гренки хлеб батон завтрак' },
+                { title: 'Пицца на тортилье или лаваше за 8 минут', emoji: '🍕', mood: 'fast', temp: 190, time: 8, cal: '220 ккал', macros: { kcal: 220, p: 13, f: 9, c: 21 }, kw: 'пицца лаваш тортилья сыр' },
+                { title: 'Шаурма хрустящая с курицей и овощами', emoji: '🌯', mood: 'fast', temp: 190, time: 8, cal: '215 ккал', macros: { kcal: 215, p: 15, f: 8, c: 20 }, kw: 'шаурма лаваш курица' },
+                { title: 'Яблоки запечённые с творогом, мёдом и орехами', emoji: '🍎', mood: 'pp', temp: 175, time: 15, cal: '125 ккал', macros: { kcal: 125, p: 8, f: 4, c: 14 }, kw: 'яблоки творог мед десерт пп' },
+                { title: 'Конвертики из лаваша с творогом и зеленью', emoji: '🥟', mood: 'breakfast', temp: 185, time: 10, cal: '185 ккал', macros: { kcal: 185, p: 12, f: 6, c: 20 }, kw: 'лаваш творог сыр перекус' },
+                { title: 'Творожные пончики без жарки в масле', emoji: '🍩', mood: 'kids', temp: 180, time: 12, cal: '195 ккал', macros: { kcal: 195, p: 12, f: 6, c: 23 }, kw: 'пончики творог детям к чаю' },
+                { title: 'Овсяноблин с сыром и ветчиной за 9 минут', emoji: '🥞', mood: 'pp', temp: 180, time: 9, cal: '175 ккал', macros: { kcal: 175, p: 13, f: 7, c: 15 }, kw: 'овсяноблин овсянка яйца завтрак' },
+                { title: 'Синнабоны быстрые из слоёного теста с корицей', emoji: '🍥', mood: 'dessert', temp: 175, time: 14, cal: '285 ккал', macros: { kcal: 285, p: 6, f: 14, c: 34 }, kw: 'синнабоны булочки корица тесто' }
             ];
 
             breakfastsAndBakery.forEach(b => {
@@ -1063,6 +1080,7 @@
                         temp: b.temp,
                         time: b.time + (i % 2),
                         calories: b.cal,
+                        macros: b.macros,
                         keywords: ['завтрак', 'выпечка', ...b.kw.split(' ')],
                         ingredients: [
                             { name: 'Основной ингредиент по рецепту', amount: 250, unit: 'г', category: b.kw.includes('творог') ? 'творог' : '' },
@@ -1081,21 +1099,21 @@
 
             // 8. Полуфабрикаты и закуски под кино / пенное (60+ вариантов)
             const frozenAndSnacks = [
-                { title: 'Наггетсы замороженные хрустящие', emoji: '🍗', mood: 'frozen', temp: 195, time: 11, cal: '235 ккал', kw: 'наггетсы замороженные полуфабрикаты' },
-                { title: 'Картофель фри замороженный как в ресторане', emoji: '🍟', mood: 'frozen', temp: 200, time: 14, cal: '195 ккал', kw: 'картошка фри замороженная' },
-                { title: 'Сырные палочки моцарелла в панировке', emoji: '🧀', mood: 'snack', temp: 195, time: 8, cal: '285 ккал', kw: 'сырные палочки моцарелла под пиво' },
-                { title: 'Луковые кольца хрустящие в кляре', emoji: '🧅', mood: 'snack', temp: 195, time: 10, cal: '225 ккал', kw: 'луковые кольца закуска под пиво' },
-                { title: 'Чебуреки мини замороженные румяные', emoji: '🥟', mood: 'frozen', temp: 190, time: 13, cal: '270 ккал', kw: 'чебуреки полуфабрикаты замороженные' },
-                { title: 'Вареники с картошкой жареные со сметаной', emoji: '🥟', mood: 'frozen', temp: 190, time: 13, cal: '215 ккал', kw: 'вареники пельмени полуфабрикаты' },
-                { title: 'Котлеты замороженные (Кордон блю / Киевские)', emoji: '🍗', mood: 'frozen', temp: 185, time: 18, cal: '260 ккал', kw: 'котлеты кордон блю замороженные' },
-                { title: 'Гренки чесночные из бородинского хлеба', emoji: '🍞', mood: 'snack', temp: 195, time: 8, cal: '210 ккал', kw: 'гренки сухарики чеснок хлеб под пиво' },
-                { title: 'Чипсы из лаваша с паприкой и сыром за 6 минут', emoji: '🌮', mood: 'snack', temp: 180, time: 6, cal: '175 ккал', kw: 'чипсы лаваш закуска под кино' },
-                { title: 'Креветки в панировке темпура замороженные', emoji: '🍤', mood: 'frozen', temp: 195, time: 10, cal: '215 ккал', kw: 'креветки темпура закуска' },
-                { title: 'Блинчики с мясом или творогом замороженные', emoji: '🥞', mood: 'frozen', temp: 185, time: 12, cal: '230 ккал', kw: 'блинчики блины замороженные завтрак' },
-                { title: 'Куриные попкорн-шарики хрустящие', emoji: '🍿', mood: 'snack', temp: 195, time: 11, cal: '230 ккал', kw: 'попкорн курица закуска под кино' },
-                { title: 'Крылышки в медово-остром соусе под пенное', emoji: '🍗', mood: 'snack', temp: 195, time: 20, cal: '250 ккал', kw: 'крылья под пиво острое' },
-                { title: 'Сосиски гриль с надрезами за 9 минут', emoji: '🌭', mood: 'fast', temp: 190, time: 9, cal: '245 ккал', kw: 'сосиски сардельки быстро' },
-                { title: 'Хинкали жареные с хрустящим донышком', emoji: '🥟', mood: 'frozen', temp: 190, time: 15, cal: '255 ккал', kw: 'хинкали пельмени замороженные' }
+                { title: 'Наггетсы замороженные хрустящие', emoji: '🍗', mood: 'frozen', temp: 195, time: 11, cal: '235 ккал', macros: { kcal: 235, p: 15, f: 12, c: 17 }, kw: 'наггетсы замороженные полуфабрикаты' },
+                { title: 'Картофель фри замороженный как в ресторане', emoji: '🍟', mood: 'frozen', temp: 200, time: 14, cal: '195 ккал', macros: { kcal: 195, p: 3, f: 8, c: 28 }, kw: 'картошка фри замороженная' },
+                { title: 'Сырные палочки моцарелла в панировке', emoji: '🧀', mood: 'snack', temp: 195, time: 8, cal: '285 ккал', macros: { kcal: 285, p: 15, f: 17, c: 18 }, kw: 'сырные палочки моцарелла под пиво' },
+                { title: 'Луковые кольца хрустящие в кляре', emoji: '🧅', mood: 'snack', temp: 195, time: 10, cal: '225 ккал', macros: { kcal: 225, p: 4, f: 11, c: 27 }, kw: 'луковые кольца закуска под пиво' },
+                { title: 'Чебуреки мини замороженные румяные', emoji: '🥟', mood: 'frozen', temp: 190, time: 13, cal: '270 ккал', macros: { kcal: 270, p: 11, f: 14, c: 25 }, kw: 'чебуреки полуфабрикаты замороженные' },
+                { title: 'Вареники с картошкой жареные со сметаной', emoji: '🥟', mood: 'frozen', temp: 190, time: 13, cal: '215 ккал', macros: { kcal: 215, p: 6, f: 7, c: 32 }, kw: 'вареники пельмени полуфабрикаты' },
+                { title: 'Котлеты замороженные (Кордон блю / Киевские)', emoji: '🍗', mood: 'frozen', temp: 185, time: 18, cal: '260 ккал', macros: { kcal: 260, p: 16, f: 16, c: 13 }, kw: 'котлеты кордон блю замороженные' },
+                { title: 'Гренки чесночные из бородинского хлеба', emoji: '🍞', mood: 'snack', temp: 195, time: 8, cal: '210 ккал', macros: { kcal: 210, p: 6, f: 7, c: 31 }, kw: 'гренки сухарики чеснок хлеб под пиво' },
+                { title: 'Чипсы из лаваша с паприкой и сыром за 6 минут', emoji: '🌮', mood: 'snack', temp: 180, time: 6, cal: '175 ккал', macros: { kcal: 175, p: 8, f: 6, c: 22 }, kw: 'чипсы лаваш закуска под кино' },
+                { title: 'Креветки в панировке темпура замороженные', emoji: '🍤', mood: 'frozen', temp: 195, time: 10, cal: '215 ккал', macros: { kcal: 215, p: 14, f: 10, c: 17 }, kw: 'креветки темпура закуска' },
+                { title: 'Блинчики с мясом или творогом замороженные', emoji: '🥞', mood: 'frozen', temp: 185, time: 12, cal: '230 ккал', macros: { kcal: 230, p: 9, f: 10, c: 26 }, kw: 'блинчики блины замороженные завтрак' },
+                { title: 'Куриные попкорн-шарики хрустящие', emoji: '🍿', mood: 'snack', temp: 195, time: 11, cal: '230 ккал', macros: { kcal: 230, p: 16, f: 11, c: 17 }, kw: 'попкорн курица закуска под кино' },
+                { title: 'Крылышки в медово-остром соусе под пенное', emoji: '🍗', mood: 'snack', temp: 195, time: 20, cal: '250 ккал', macros: { kcal: 250, p: 21, f: 15, c: 7 }, kw: 'крылья под пиво острое' },
+                { title: 'Сосиски гриль с надрезами за 9 минут', emoji: '🌭', mood: 'fast', temp: 190, time: 9, cal: '245 ккал', macros: { kcal: 245, p: 11, f: 21, c: 3 }, kw: 'сосиски сардельки быстро' },
+                { title: 'Хинкали жареные с хрустящим донышком', emoji: '🥟', mood: 'frozen', temp: 190, time: 15, cal: '255 ккал', macros: { kcal: 255, p: 12, f: 13, c: 23 }, kw: 'хинкали пельмени замороженные' }
             ];
 
             frozenAndSnacks.forEach(fs => {
@@ -1110,6 +1128,7 @@
                         temp: fs.temp,
                         time: fs.time,
                         calories: fs.cal,
+                        macros: fs.macros,
                         keywords: ['закуска', 'быстро', ...fs.kw.split(' ')],
                         ingredients: [
                             { name: fs.title.split(' (')[0], amount: 350, unit: 'г', category: '' },
@@ -1154,6 +1173,7 @@
             aiRecipes: savedAiRecipes,
             activeRecipeId: null,
             servings: 2,
+            kbzhuMode: '100g',           // '100g' | 'serving'
             ingMods: {},                 // { [idx]: { status: 'replaced' | 'removed', replacement?: string } }
             openSubDrawerIdx: null,
             timerTotalSec: 0,
@@ -1163,8 +1183,75 @@
             shakeNotified: false
         };
 
+        // Расчёт КБЖУ (на 100 г и на 1 порцию с учётом убранных ингредиентов)
+        function getRecipeMacros(recipe, applyMods = false) {
+            const kcalBase = (recipe.macros && Number(recipe.macros.kcal)) || parseInt(recipe.calories, 10) || 180;
+            let p100 = recipe.macros && recipe.macros.p !== undefined ? Number(recipe.macros.p) : Math.round((kcalBase * 0.25) / 4);
+            let f100 = recipe.macros && recipe.macros.f !== undefined ? Number(recipe.macros.f) : Math.round((kcalBase * 0.35) / 9);
+            let c100 = recipe.macros && recipe.macros.c !== undefined ? Number(recipe.macros.c) : Math.max(0, Math.round((kcalBase - p100 * 4 - f100 * 9) / 4));
+            let k100 = kcalBase;
+
+            // Оцениваем вес 1 порции по граммовке ингредиентов (по умолчанию ~240 г)
+            let totalGrams = 0;
+            (recipe.ingredients || []).forEach(ing => {
+                const u = (ing.unit || '').toLowerCase();
+                if (u === 'г' || u === 'мл') totalGrams += Number(ing.amount) || 0;
+                else if (u.includes('шт')) totalGrams += (Number(ing.amount) || 1) * 55;
+                else if (u.includes('ст. л')) totalGrams += (Number(ing.amount) || 1) * 18;
+                else if (u.includes('ч. л')) totalGrams += (Number(ing.amount) || 1) * 5;
+            });
+            const baseServ = recipe.baseServings || 2;
+            const servingGrams = totalGrams > 80
+                ? Math.min(450, Math.max(120, Math.round(totalGrams / baseServ)))
+                : 240;
+
+            if (applyMods && state.ingMods) {
+                (recipe.ingredients || []).forEach((ing, idx) => {
+                    const mod = state.ingMods[idx];
+                    if (mod && mod.status === 'removed') {
+                        const low = `${ing.name} ${ing.category || ''}`.toLowerCase();
+                        if (low.includes('масло')) {
+                            f100 = Math.max(1, f100 - 4);
+                            k100 = Math.max(45, k100 - 35);
+                        } else if (low.includes('сахар') || low.includes('мёд') || low.includes('мед')) {
+                            c100 = Math.max(0, c100 - 9);
+                            k100 = Math.max(45, k100 - 36);
+                        } else if (low.includes('сыр')) {
+                            p100 = Math.max(1, p100 - 3);
+                            f100 = Math.max(1, f100 - 4);
+                            k100 = Math.max(45, k100 - 48);
+                        } else if (low.includes('сметана') || low.includes('майонез')) {
+                            f100 = Math.max(1, f100 - 3);
+                            k100 = Math.max(45, k100 - 27);
+                        }
+                    }
+                });
+            }
+
+            const ratio = servingGrams / 100;
+            return {
+                kcal: Math.round(k100),
+                p: Math.round(p100 * 10) / 10,
+                f: Math.round(f100 * 10) / 10,
+                c: Math.round(c100 * 10) / 10,
+                servingGrams,
+                serving: {
+                    kcal: Math.round(k100 * ratio),
+                    p: Math.round(p100 * ratio),
+                    f: Math.round(f100 * ratio),
+                    c: Math.round(c100 * ratio)
+                }
+            };
+        }
+
+        function setKbzhuMode(mode) {
+            haptic('selection');
+            state.kbzhuMode = mode;
+            renderModalBody();
+        }
+
         // =========================================================================
-        // 4. ИНИЦИАЛИЗАЦИЯ TELEGRAM WEBAPP
+        // 4. ИНИЦИАЛИЗАЦИЯ TELEGRAM И БАЗОВЫЕ ХЕЛПЕРЫ
         // =========================================================================
         function initTelegram() {
             try {
@@ -1172,19 +1259,19 @@
                 tg.ready();
                 tg.expand();
 
-                const firstName = tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.first_name;
-                if (firstName) {
-                    const greetEl = document.getElementById('user-greeting');
-                    if (greetEl) {
-                        greetEl.textContent = `Привет, ${firstName}! ${RECIPES.length} рецептов готовы`;
-                    }
+                const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+                const greetingEl = document.getElementById('user-greeting');
+                if (user && user.first_name && greetingEl) {
+                    greetingEl.textContent = `Привет, ${user.first_name}! ${RECIPES.length}+ рецептов`;
                 }
 
                 if (tg.BackButton) {
                     tg.BackButton.onClick(() => {
-                        if (!document.getElementById('recipe-modal').classList.contains('hidden')) {
+                        const recipeModal = document.getElementById('recipe-modal');
+                        const aiModal = document.getElementById('ai-modal');
+                        if (recipeModal && !recipeModal.classList.contains('hidden')) {
                             closeRecipeModal();
-                        } else if (!document.getElementById('ai-modal').classList.contains('hidden')) {
+                        } else if (aiModal && !aiModal.classList.contains('hidden')) {
                             closeAiModal();
                         }
                     });
@@ -1192,22 +1279,70 @@
             } catch (e) {}
         }
 
+        function normalizeStem(word) {
+            let w = (word || '').toLowerCase().replace(/ё/g, 'е').trim();
+            if (w.length <= 3) return w;
+            return w.replace(/(ами|ями|ого|ему|ому|ыми|ими|иях|ах|ях|ов|ев|ей|ом|ем|ам|ям|ую|юю|ая|яя|ое|ее|ые|ие|ый|ий|ой|у|ю|а|я|о|е|ы|и|ь)$/, '');
+        }
+
+        function formatAmount(amount, factor) {
+            const num = Number(amount);
+            if (isNaN(num) || num <= 0) return '';
+            const scaled = num * factor;
+            if (scaled >= 10) return String(Math.round(scaled));
+            const rounded = Math.round(scaled * 10) / 10;
+            return rounded === 0 ? '0.5' : String(rounded);
+        }
+
         // =========================================================================
-        // 5. ФИЛЬТРЫ, ПОИСК ПО НАЗВАНИЮ И ПО ХОЛОДИЛЬНИКУ
+        // 5. ИЗБРАННОЕ, ФИЛЬТРЫ И ПОИСК ПО БАЗЕ
         // =========================================================================
         function updateFavoritesBadge() {
             const countEl = document.getElementById('fav-count');
-            const iconEl = document.getElementById('fav-heart-icon');
+            const heartEl = document.getElementById('fav-heart-icon');
             const btnEl = document.getElementById('fav-filter-btn');
-            if (countEl) countEl.textContent = state.favorites.length;
-            if (iconEl) iconEl.textContent = state.onlyFavorites ? '❤️' : (state.favorites.length > 0 ? '❤️' : '🤍');
+            if (countEl) countEl.textContent = String(state.favorites.length);
+            if (heartEl) heartEl.textContent = state.onlyFavorites || state.favorites.length > 0 ? '❤️' : '🤍';
             if (btnEl) {
                 if (state.onlyFavorites) {
-                    btnEl.classList.add('ring-2', 'ring-orange-500');
+                    btnEl.classList.add('btn-accent');
                 } else {
-                    btnEl.classList.remove('ring-2', 'ring-orange-500');
+                    btnEl.classList.remove('btn-accent');
                 }
             }
+        }
+
+        function saveFavorites() {
+            try {
+                localStorage.setItem('airfryer_favs_v2', JSON.stringify(state.favorites));
+            } catch (e) {}
+            updateFavoritesBadge();
+        }
+
+        function toggleFavoriteById(id) {
+            haptic('light');
+            const idx = state.favorites.indexOf(id);
+            if (idx === -1) {
+                state.favorites.push(id);
+                showToast('Добавлено в избранное ❤️');
+            } else {
+                state.favorites.splice(idx, 1);
+                showToast('Убрано из избранного');
+            }
+            saveFavorites();
+
+            if (state.activeRecipeId === id) {
+                const modalFavBtn = document.getElementById('modal-fav-btn');
+                if (modalFavBtn) {
+                    modalFavBtn.textContent = state.favorites.includes(id) ? '❤️' : '🤍';
+                }
+            }
+            renderRecipesFeed();
+        }
+
+        function toggleModalFavorite() {
+            if (!state.activeRecipeId) return;
+            toggleFavoriteById(state.activeRecipeId);
         }
 
         function toggleFavoritesView() {
@@ -1218,81 +1353,16 @@
             renderRecipesFeed();
         }
 
-        function setSearchMode(mode) {
-            haptic('selection');
-            state.searchMode = mode;
-            state.visibleLimit = 30;
-
-            const nameBtn = document.getElementById('mode-name-btn');
-            const fridgeBtn = document.getElementById('mode-fridge-btn');
-            const input = document.getElementById('search-input');
-            const fridgeWrapper = document.getElementById('fridge-chips-wrapper');
-
-            if (mode === 'name') {
-                nameBtn.classList.add('btn-accent');
-                nameBtn.classList.remove('text-hint');
-                fridgeBtn.classList.remove('btn-accent');
-                fridgeBtn.classList.add('text-hint');
-                input.placeholder = 'Поиск по 550+ рецептам: шарлотка, запеканка, шашлык...';
-                fridgeWrapper.classList.add('hidden');
-            } else {
-                fridgeBtn.classList.add('btn-accent');
-                fridgeBtn.classList.remove('text-hint');
-                nameBtn.classList.remove('btn-accent');
-                nameBtn.classList.add('text-hint');
-                input.placeholder = 'Введи продукты через запятую: курица, сыр, яблоки...';
-                fridgeWrapper.classList.remove('hidden');
-                renderFridgeChips();
-            }
-
-            renderRecipesFeed();
-        }
-
-        function handleSearchInput(val) {
-            state.searchQuery = val;
-            state.visibleLimit = 30;
-            const clearBtn = document.getElementById('clear-search-btn');
-            if (clearBtn) {
-                if (val.trim().length > 0) {
-                    clearBtn.classList.remove('hidden');
-                } else {
-                    clearBtn.classList.add('hidden');
-                }
-            }
-            if (state.searchMode === 'fridge') {
-                renderFridgeChips();
-            }
-            renderRecipesFeed();
-        }
-
-        function clearSearch() {
-            haptic('light');
-            const input = document.getElementById('search-input');
-            if (input) input.value = '';
-            handleSearchInput('');
-        }
-
-        function resetAllFilters() {
-            haptic('light');
-            state.selectedMood = 'all';
-            state.onlyFavorites = false;
-            state.visibleLimit = 30;
-            updateFavoritesBadge();
-            clearSearch();
-            renderMoodChips();
-            renderRecipesFeed();
-        }
-
         function renderMoodChips() {
             const container = document.getElementById('mood-chips');
             if (!container) return;
             container.innerHTML = MOOD_CATEGORIES.map(cat => {
-                const active = state.selectedMood === cat.id;
+                const active = state.selectedMood === cat.id && !state.onlyFavorites;
                 return `
                     <button
                         type="button"
                         onclick="selectMood('${cat.id}')"
-                        class="chip-item px-3.5 py-2 rounded-2xl text-xs font-semibold ${active ? 'btn-accent shadow-md' : 'surface-card text-hint hover:text-white'}"
+                        class="chip-item px-3.5 py-2 rounded-xl text-xs font-semibold ${active ? 'btn-accent shadow' : 'surface-card text-hint hover:text-white'}"
                     >
                         ${cat.label}
                     </button>
@@ -1303,7 +1373,9 @@
         function selectMood(moodId) {
             haptic('selection');
             state.selectedMood = moodId;
+            state.onlyFavorites = false;
             state.visibleLimit = 30;
+            updateFavoritesBadge();
             renderMoodChips();
             renderRecipesFeed();
         }
@@ -1312,20 +1384,19 @@
             const container = document.getElementById('fridge-chips');
             if (!container) return;
             const currentTokens = state.searchQuery
-                .toLowerCase()
-                .split(/[,;\s]+/)
-                .map(s => s.trim())
+                .split(/[,;]+/)
+                .map(s => s.trim().toLowerCase())
                 .filter(Boolean);
 
             container.innerHTML = FRIDGE_QUICK_ITEMS.map(item => {
-                const selected = currentTokens.some(t => item.startsWith(t) || t.startsWith(item.slice(0, 4)));
+                const isSelected = currentTokens.includes(item.toLowerCase());
                 return `
                     <button
                         type="button"
                         onclick="toggleFridgeChip('${item}')"
-                        class="chip-item px-2.5 py-1.5 rounded-xl text-[11px] font-semibold ${selected ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'surface-card text-hint'}"
+                        class="chip-item px-2.5 py-1 rounded-lg text-[11px] font-semibold ${isSelected ? 'btn-accent' : 'surface-card text-hint'}"
                     >
-                        ${selected ? '✓ ' : '+ '}${item}
+                        ${isSelected ? '✓ ' : '+ '}${item}
                     </button>
                 `;
             }).join('');
@@ -1333,158 +1404,243 @@
 
         function toggleFridgeChip(item) {
             haptic('selection');
-            const input = document.getElementById('search-input');
             let parts = state.searchQuery
-                .split(',')
+                .split(/[,;]+/)
                 .map(s => s.trim())
                 .filter(Boolean);
 
-            const existsIdx = parts.findIndex(p => p.toLowerCase() === item.toLowerCase());
-            if (existsIdx >= 0) {
-                parts.splice(existsIdx, 1);
+            const low = item.toLowerCase();
+            const existingIdx = parts.findIndex(p => p.toLowerCase() === low);
+            if (existingIdx !== -1) {
+                parts.splice(existingIdx, 1);
             } else {
                 parts.push(item);
             }
 
-            const nextVal = parts.join(', ');
-            if (input) input.value = nextVal;
-            handleSearchInput(nextVal);
-        }
+            const nextQuery = parts.join(', ');
+            state.searchQuery = nextQuery;
+            state.visibleLimit = 30;
 
-        function normalizeStem(word) {
-            const w = word.toLowerCase().trim();
-            if (w.length <= 3) return w;
-            return w.replace(/(ами|ями|ого|его|ому|ему|ыми|ими|ах|ях|ов|ев|ей|ом|ем|ою|ею|ой|ей|ий|ый|ая|яя|ое|ее|ые|ие|у|ю|а|я|ы|и|е|о)$/i, '');
-        }
+            const input = document.getElementById('search-input');
+            const clearBtn = document.getElementById('clear-search-btn');
+            if (input) input.value = nextQuery;
+            if (clearBtn) clearBtn.classList.toggle('hidden', !nextQuery);
 
-        function getFilteredRecipes() {
-            const q = state.searchQuery.trim().toLowerCase();
-
-            let list = RECIPES.filter(recipe => {
-                if (state.onlyFavorites && !state.favorites.includes(recipe.id)) {
-                    return false;
-                }
-                if (state.selectedMood !== 'all' && !recipe.moods.includes(state.selectedMood)) {
-                    return false;
-                }
-                return true;
-            });
-
-            if (!q) {
-                return list.map(r => ({ recipe: r, matchedIngs: [] }));
-            }
-
-            if (state.searchMode === 'fridge') {
-                const fridgeItems = q
-                    .split(/[,;]+/)
-                    .map(s => s.trim())
-                    .filter(Boolean);
-
-                const scored = [];
-                list.forEach(recipe => {
-                    const matchedIngs = [];
-                    fridgeItems.forEach(fItem => {
-                        const stem = normalizeStem(fItem);
-                        const found = recipe.ingredients.some(ing => {
-                            const ingLow = ing.name.toLowerCase();
-                            return ingLow.includes(fItem) || (stem.length >= 3 && ingLow.includes(stem));
-                        }) || recipe.title.toLowerCase().includes(fItem);
-
-                        if (found) matchedIngs.push(fItem);
-                    });
-
-                    if (matchedIngs.length > 0) {
-                        scored.push({ recipe, matchedIngs });
-                    }
-                });
-
-                scored.sort((a, b) => b.matchedIngs.length - a.matchedIngs.length);
-                return scored;
-            } else {
-                const words = q.split(/\s+/).filter(Boolean);
-                const stems = words.map(normalizeStem);
-
-                return list
-                    .filter(recipe => {
-                        const haystack = [
-                            recipe.title,
-                            ...(recipe.keywords || []),
-                            ...recipe.ingredients.map(i => i.name)
-                        ].join(' ').toLowerCase();
-
-                        return stems.every((st, idx) => {
-                            const orig = words[idx];
-                            return haystack.includes(orig) || (st.length >= 3 && haystack.includes(st));
-                        });
-                    })
-                    .map(r => ({ recipe: r, matchedIngs: [] }));
-            }
-        }
-
-        function loadMoreRecipes() {
-            haptic('light');
-            state.visibleLimit += 30;
+            renderFridgeChips();
             renderRecipesFeed();
         }
 
+        function setSearchMode(mode) {
+            haptic('selection');
+            state.searchMode = mode;
+            state.visibleLimit = 30;
+
+            const nameBtn = document.getElementById('mode-name-btn');
+            const fridgeBtn = document.getElementById('mode-fridge-btn');
+            const fridgeWrapper = document.getElementById('fridge-chips-wrapper');
+            const input = document.getElementById('search-input');
+
+            if (mode === 'name') {
+                if (nameBtn) {
+                    nameBtn.classList.add('btn-accent');
+                    nameBtn.classList.remove('text-hint');
+                }
+                if (fridgeBtn) {
+                    fridgeBtn.classList.remove('btn-accent');
+                    fridgeBtn.classList.add('text-hint');
+                }
+                if (fridgeWrapper) fridgeWrapper.classList.add('hidden');
+                if (input) input.placeholder = 'Поиск по 550+ рецептам: шарлотка, запеканка, шашлык...';
+            } else {
+                if (fridgeBtn) {
+                    fridgeBtn.classList.add('btn-accent');
+                    fridgeBtn.classList.remove('text-hint');
+                }
+                if (nameBtn) {
+                    nameBtn.classList.remove('btn-accent');
+                    nameBtn.classList.add('text-hint');
+                }
+                if (fridgeWrapper) fridgeWrapper.classList.remove('hidden');
+                if (input) input.placeholder = 'Введи продукты через запятую: курица, сыр, яблоки...';
+                renderFridgeChips();
+            }
+
+            renderRecipesFeed();
+        }
+
+        function handleSearchInput(val) {
+            state.searchQuery = val;
+            state.visibleLimit = 30;
+            const clearBtn = document.getElementById('clear-search-btn');
+            if (clearBtn) clearBtn.classList.toggle('hidden', !val.trim());
+            if (state.searchMode === 'fridge') {
+                renderFridgeChips();
+            }
+            renderRecipesFeed();
+        }
+
+        function clearSearch() {
+            haptic('light');
+            state.searchQuery = '';
+            state.visibleLimit = 30;
+            const input = document.getElementById('search-input');
+            const clearBtn = document.getElementById('clear-search-btn');
+            if (input) input.value = '';
+            if (clearBtn) clearBtn.classList.add('hidden');
+            if (state.searchMode === 'fridge') renderFridgeChips();
+            renderRecipesFeed();
+        }
+
+        function resetAllFilters() {
+            haptic('light');
+            state.searchQuery = '';
+            state.selectedMood = 'all';
+            state.onlyFavorites = false;
+            state.visibleLimit = 30;
+
+            const input = document.getElementById('search-input');
+            const clearBtn = document.getElementById('clear-search-btn');
+            if (input) input.value = '';
+            if (clearBtn) clearBtn.classList.add('hidden');
+
+            updateFavoritesBadge();
+            renderMoodChips();
+            if (state.searchMode === 'fridge') renderFridgeChips();
+            renderRecipesFeed();
+        }
+
+        function getFilteredRecipes() {
+            const rawQuery = state.searchQuery.trim();
+            let pool = RECIPES;
+
+            if (state.onlyFavorites) {
+                pool = pool.filter(r => state.favorites.includes(r.id));
+            } else if (state.selectedMood && state.selectedMood !== 'all') {
+                pool = pool.filter(r => Array.isArray(r.moods) && r.moods.includes(state.selectedMood));
+            }
+
+            if (!rawQuery) {
+                return pool.map(recipe => ({ recipe, matchedIngs: [] }));
+            }
+
+            if (state.searchMode === 'fridge') {
+                const userTerms = rawQuery
+                    .split(/[,;]+/)
+                    .map(t => t.trim())
+                    .filter(Boolean);
+
+                const results = [];
+                pool.forEach(recipe => {
+                    const matchedIngs = [];
+                    userTerms.forEach(term => {
+                        const stem = normalizeStem(term);
+                        if (!stem) return;
+                        const foundIng = (recipe.ingredients || []).find(ing => {
+                            const ingLow = `${ing.name} ${ing.category || ''}`.toLowerCase().replace(/ё/g, 'е');
+                            return ingLow.includes(stem);
+                        });
+                        const kwMatch = (recipe.keywords || []).some(k => k.toLowerCase().replace(/ё/g, 'е').includes(stem));
+                        if (foundIng) {
+                            matchedIngs.push(foundIng.name);
+                        } else if (kwMatch) {
+                            matchedIngs.push(term);
+                        }
+                    });
+
+                    if (matchedIngs.length > 0) {
+                        results.push({ recipe, matchedIngs: [...new Set(matchedIngs)] });
+                    }
+                });
+
+                results.sort((a, b) => b.matchedIngs.length - a.matchedIngs.length);
+                return results;
+            }
+
+            // Поиск по блюду / ключевому слову с учётом падежей
+            const tokens = rawQuery
+                .split(/\s+/)
+                .map(t => normalizeStem(t))
+                .filter(Boolean);
+
+            const matched = [];
+            pool.forEach(recipe => {
+                const haystack = [
+                    recipe.title,
+                    ...(recipe.keywords || []),
+                    ...(recipe.ingredients || []).map(i => i.name)
+                ].join(' ').toLowerCase().replace(/ё/g, 'е');
+
+                const allMatch = tokens.every(tok => haystack.includes(tok));
+                if (allMatch) {
+                    matched.push({ recipe, matchedIngs: [] });
+                }
+            });
+
+            return matched;
+        }
+
+        // =========================================================================
+        // 6. ОТРИСОВКА ЛЕНТЫ РЕЦЕПТОВ И МОДАЛЬНОГО ОКНА БЛЮДА
+        // =========================================================================
         function renderRecipesFeed() {
             const grid = document.getElementById('recipes-grid');
             const label = document.getElementById('results-label');
-            const emptyState = document.getElementById('empty-state');
             const resetBtn = document.getElementById('reset-filters-btn');
-            const loadMoreWrapper = document.getElementById('load-more-wrapper');
+            const emptyState = document.getElementById('empty-state');
+            const loadMoreWrap = document.getElementById('load-more-wrapper');
             const loadMoreBtn = document.getElementById('load-more-btn');
-            const aiSearchBanner = document.getElementById('ai-search-banner');
-            const aiSearchBannerText = document.getElementById('ai-search-banner-text');
+            const aiBanner = document.getElementById('ai-search-banner');
+            const aiBannerText = document.getElementById('ai-search-banner-text');
+
             if (!grid) return;
 
-            const q = state.searchQuery.trim();
-            const hasFilters = q.length > 0 || state.selectedMood !== 'all' || state.onlyFavorites;
-            if (resetBtn) {
-                resetBtn.classList.toggle('hidden', !hasFilters);
-            }
+            const filtered = getFilteredRecipes();
+            const hasActiveFilter = Boolean(state.searchQuery.trim()) || state.selectedMood !== 'all' || state.onlyFavorites;
 
-            const list = getFilteredRecipes();
+            if (resetBtn) resetBtn.classList.toggle('hidden', !hasActiveFilter);
+
             if (label) {
-                label.textContent = state.onlyFavorites
-                    ? `Избранное: ${list.length}`
-                    : `Найдено рецептов: ${list.length}`;
-            }
-
-            if (list.length === 0) {
-                grid.innerHTML = '';
-                if (loadMoreWrapper) loadMoreWrapper.classList.add('hidden');
-                if (aiSearchBanner) aiSearchBanner.classList.add('hidden');
-                emptyState.classList.remove('hidden');
-                return;
-            }
-
-            emptyState.classList.add('hidden');
-
-            if (aiSearchBanner && aiSearchBannerText) {
-                if (q.length >= 2) {
-                    aiSearchBanner.classList.remove('hidden');
-                    aiSearchBannerText.textContent = `Сгенерировать 3 авторских рецепта по запросу «${state.searchQuery.trim()}»`;
+                if (state.onlyFavorites) {
+                    label.textContent = `В избранном: ${filtered.length}`;
+                } else if (state.searchQuery.trim()) {
+                    label.textContent = `Найдено рецептов: ${filtered.length}`;
                 } else {
-                    aiSearchBanner.classList.add('hidden');
+                    label.textContent = `Доступно рецептов: ${filtered.length}`;
                 }
             }
 
-            const visibleSlice = list.slice(0, state.visibleLimit);
-            const remaining = list.length - visibleSlice.length;
+            if (aiBanner) {
+                const showBanner = Boolean(state.searchQuery.trim()) && filtered.length > 0 && filtered.length < 6;
+                aiBanner.classList.toggle('hidden', !showBanner);
+                if (showBanner && aiBannerText) {
+                    aiBannerText.textContent = `Придумать ещё 3 рецепта по запросу «${state.searchQuery.trim()}»`;
+                }
+            }
 
-            if (loadMoreWrapper && loadMoreBtn) {
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                if (emptyState) emptyState.classList.remove('hidden');
+                if (loadMoreWrap) loadMoreWrap.classList.add('hidden');
+                return;
+            }
+
+            if (emptyState) emptyState.classList.add('hidden');
+
+            const visibleSlice = filtered.slice(0, state.visibleLimit);
+            if (loadMoreWrap && loadMoreBtn) {
+                const remaining = filtered.length - visibleSlice.length;
                 if (remaining > 0) {
-                    loadMoreWrapper.classList.remove('hidden');
-                    loadMoreBtn.textContent = `Показать ещё рецепты (осталось ${remaining})`;
+                    loadMoreWrap.classList.remove('hidden');
+                    loadMoreBtn.textContent = `Показать ещё (${Math.min(30, remaining)} из ${remaining})`;
                 } else {
-                    loadMoreWrapper.classList.add('hidden');
+                    loadMoreWrap.classList.add('hidden');
                 }
             }
 
             grid.innerHTML = visibleSlice.map(({ recipe, matchedIngs }) => {
                 const isFav = state.favorites.includes(recipe.id);
                 const ingPreview = recipe.ingredients.slice(0, 4).map(i => i.name).join(' · ');
+                const m = getRecipeMacros(recipe, false);
 
                 const matchedBadge = matchedIngs.length > 0
                     ? `<div class="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-medium text-emerald-400">
@@ -1517,8 +1673,8 @@
                                     <span class="px-2 py-0.5 rounded-lg bg-sky-500/15 text-sky-400">
                                         ⏱ ${recipe.time} мин
                                     </span>
-                                    <span class="px-2 py-0.5 rounded-lg bg-slate-500/15 text-hint">
-                                        🔥 ${recipe.calories}
+                                    <span class="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-400">
+                                        🔥 ${m.kcal} ккал · Б ${m.p} / Ж ${m.f} / У ${m.c}
                                     </span>
                                 </div>
 
@@ -1540,48 +1696,20 @@
             }).join('');
         }
 
-        function toggleFavoriteById(id) {
+        function loadMoreRecipes() {
             haptic('light');
-            const idx = state.favorites.indexOf(id);
-            if (idx >= 0) {
-                state.favorites.splice(idx, 1);
-                showToast('Убрано из избранного');
-            } else {
-                state.favorites.push(id);
-                showToast('Добавлено в избранное ❤️');
-            }
-            localStorage.setItem('airfryer_favs_v2', JSON.stringify(state.favorites));
-            updateFavoritesBadge();
+            state.visibleLimit += 30;
             renderRecipesFeed();
-
-            if (state.activeRecipeId === id) {
-                const modalFavBtn = document.getElementById('modal-fav-btn');
-                if (modalFavBtn) {
-                    modalFavBtn.textContent = state.favorites.includes(id) ? '❤️' : '🤍';
-                }
-            }
         }
 
         function pickRandomRecipe() {
             haptic('medium');
-            const pool = state.selectedMood === 'all'
-                ? RECIPES
-                : RECIPES.filter(r => r.moods.includes(state.selectedMood));
-            const source = pool.length > 0 ? pool : RECIPES;
-            const random = source[Math.floor(Math.random() * source.length)];
-            if (random) {
-                openRecipeModal(random.id);
-            }
-        }
-
-        // =========================================================================
-        // 7. МОДАЛЬНОЕ ОКНО РЕЦЕПТА, КАЛЬКУЛЯТОР ПОРЦИЙ, ЗАМЕНА ИНГРЕДИЕНТОВ И ТАЙМЕР
-        // =========================================================================
-        function formatAmount(amount, factor) {
-            const val = amount * factor;
-            if (val >= 10) return Math.round(val);
-            const rounded = Math.round(val * 10) / 10;
-            return Number.isInteger(rounded) ? rounded : rounded.toString().replace('.', ',');
+            const filtered = getFilteredRecipes();
+            const source = filtered.length > 0 ? filtered.map(x => x.recipe) : RECIPES;
+            const randomItem = source[Math.floor(Math.random() * source.length)];
+            if (!randomItem) return;
+            showToast(`🎲 Выпало: ${randomItem.title}`);
+            openRecipeModal(randomItem.id);
         }
 
         function openRecipeModal(id) {
@@ -1595,49 +1723,49 @@
             state.servings = recipe.baseServings || 2;
             state.ingMods = {};
             state.openSubDrawerIdx = null;
-            state.timerTotalSec = recipe.time * 60;
-            state.timerRemainingSec = recipe.time * 60;
-            state.timerRunning = false;
+            state.timerTotalSec = (Number(recipe.time) || 15) * 60;
+            state.timerRemainingSec = state.timerTotalSec;
             state.shakeNotified = false;
 
-            const modal = document.getElementById('recipe-modal');
             const modalFavBtn = document.getElementById('modal-fav-btn');
             if (modalFavBtn) {
                 modalFavBtn.textContent = state.favorites.includes(id) ? '❤️' : '🤍';
             }
 
             renderModalBody();
-            modal.classList.remove('hidden');
-            modal.scrollTop = 0;
+
+            const modal = document.getElementById('recipe-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.scrollTop = 0;
+            }
 
             try {
                 if (tg && tg.BackButton) tg.BackButton.show();
             } catch (e) {}
 
-            trackEvent('view_recipe', recipe.title);
+            trackEvent('open_recipe', recipe.title);
         }
 
         function closeRecipeModal() {
             haptic('light');
             stopTimer(false);
             state.activeRecipeId = null;
-            document.getElementById('recipe-modal').classList.add('hidden');
+            const modal = document.getElementById('recipe-modal');
+            if (modal) modal.classList.add('hidden');
+
             try {
-                if (tg && tg.BackButton && document.getElementById('ai-modal').classList.contains('hidden')) {
+                const aiModal = document.getElementById('ai-modal');
+                if (tg && tg.BackButton && (!aiModal || aiModal.classList.contains('hidden'))) {
                     tg.BackButton.hide();
                 }
             } catch (e) {}
         }
 
-        function toggleModalFavorite() {
-            if (!state.activeRecipeId) return;
-            toggleFavoriteById(state.activeRecipeId);
-        }
-
         function changeServings(delta) {
-            const next = state.servings + delta;
-            if (next < 1 || next > 12) return;
             haptic('selection');
+            const next = state.servings + delta;
+            if (next < 1 || next > 8) return;
             state.servings = next;
             renderModalBody();
         }
@@ -1715,6 +1843,9 @@
             if (!container || !recipe) return;
 
             const factor = state.servings / (recipe.baseServings || 2);
+            const macrosData = getRecipeMacros(recipe, true);
+            const isServingView = state.kbzhuMode === 'serving';
+            const activeNutrients = isServingView ? macrosData.serving : macrosData;
 
             // Собираем предупреждения, если убраны критичные компоненты
             const removalWarnings = [];
@@ -1857,8 +1988,53 @@
                             <div class="flex flex-wrap items-center gap-1.5 mt-2 text-xs font-bold">
                                 <span class="px-2.5 py-1 rounded-xl bg-orange-500/15 text-orange-400">🌡 ${recipe.temp}°C</span>
                                 <span class="px-2.5 py-1 rounded-xl bg-sky-500/15 text-sky-400">⏱ ${recipe.time} мин</span>
-                                <span class="px-2.5 py-1 rounded-xl bg-slate-500/15 text-hint">🔥 ${recipe.calories}</span>
+                                <span class="px-2.5 py-1 rounded-xl bg-slate-500/15 text-hint">🍽 ~${macrosData.servingGrams} г / порц.</span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок КБЖУ с переключением На 100 г / На 1 порцию -->
+                <div class="surface-card rounded-2xl p-3.5 space-y-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="text-xs font-extrabold flex items-center gap-1.5">
+                            <span>📊</span>
+                            <span>Пищевая ценность (КБЖУ)</span>
+                        </div>
+                        <div class="flex items-center gap-1 p-0.5 rounded-xl bg-slate-500/15 text-[11px] font-bold">
+                            <button
+                                type="button"
+                                onclick="setKbzhuMode('100g')"
+                                class="px-2.5 py-1 rounded-lg transition ${!isServingView ? 'btn-accent' : 'text-hint'}"
+                            >
+                                На 100 г
+                            </button>
+                            <button
+                                type="button"
+                                onclick="setKbzhuMode('serving')"
+                                class="px-2.5 py-1 rounded-lg transition ${isServingView ? 'btn-accent' : 'text-hint'}"
+                            >
+                                1 порция (~${macrosData.servingGrams} г)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                        <div class="rounded-xl p-2 bg-orange-500/10 border border-orange-500/20">
+                            <div class="text-[10px] font-semibold text-hint">Ккал</div>
+                            <div class="text-sm font-extrabold text-orange-400 mt-0.5">${activeNutrients.kcal}</div>
+                        </div>
+                        <div class="rounded-xl p-2 bg-emerald-500/10 border border-emerald-500/20">
+                            <div class="text-[10px] font-semibold text-hint">Белки</div>
+                            <div class="text-sm font-extrabold text-emerald-400 mt-0.5">${activeNutrients.p} г</div>
+                        </div>
+                        <div class="rounded-xl p-2 bg-amber-500/10 border border-amber-500/20">
+                            <div class="text-[10px] font-semibold text-hint">Жиры</div>
+                            <div class="text-sm font-extrabold text-amber-400 mt-0.5">${activeNutrients.f} г</div>
+                        </div>
+                        <div class="rounded-xl p-2 bg-sky-500/10 border border-sky-500/20">
+                            <div class="text-[10px] font-semibold text-hint">Углеводы</div>
+                            <div class="text-sm font-extrabold text-sky-400 mt-0.5">${activeNutrients.c} г</div>
                         </div>
                     </div>
                 </div>
@@ -2013,7 +2189,7 @@
 
             const systemPrompt = `Ты опытный шеф-повар, специализирующийся на приготовлении блюд в аэрогриле (Air Fryer).
 Придумай ровно 3 разнообразных, реалистичных и вкусных рецепта строго для аэрогриля под запрос пользователя на русском языке.
-Указывай точную температуру (обычно 160–200°C) и реальное время готовки в минутах для стандартной чаши аэрогриля.
+Указывай точную температуру (обычно 160–200°C), реальное время готовки в минутах для стандартной чаши аэрогриля, а также точное КБЖУ на 100 г готового блюда (kcal, protein, fat, carbs).
 Для каждого ингредиента по возможности укажи категорию замены из списка: сметана, масло, сыр, мука, сахар, яйцо, творог, чеснок, панировочные сухари, яблоки (или пустую строку).`;
 
             const payload = {
@@ -2034,6 +2210,10 @@
                                 time: { type: "INTEGER" },
                                 baseServings: { type: "INTEGER" },
                                 calories: { type: "STRING" },
+                                kcal: { type: "NUMBER" },
+                                protein: { type: "NUMBER" },
+                                fat: { type: "NUMBER" },
+                                carbs: { type: "NUMBER" },
                                 keywords: {
                                     type: "ARRAY",
                                     items: { type: "STRING" }
@@ -2056,7 +2236,7 @@
                                     items: { type: "STRING" }
                                 }
                             },
-                            required: ["title", "emoji", "temp", "time", "baseServings", "calories", "ingredients", "steps"]
+                            required: ["title", "emoji", "temp", "time", "baseServings", "calories", "kcal", "protein", "fat", "carbs", "ingredients", "steps"]
                         }
                     }
                 }
@@ -2103,20 +2283,27 @@
                 }
 
                 const now = Date.now();
-                const normalizedRecipes = parsedList.map((item, idx) => ({
-                    id: `ai-${now}-${idx}`,
-                    title: item.title || 'Авторский рецепт от ИИ-Шефа',
-                    emoji: item.emoji || '✨',
-                    moods: ['all'],
-                    isAiGenerated: true,
-                    temp: Number(item.temp) || 185,
-                    time: Number(item.time) || 15,
-                    baseServings: Number(item.baseServings) || 2,
-                    calories: item.calories || '190 ккал',
-                    keywords: Array.isArray(item.keywords) ? item.keywords : ['ии', 'аэрогриль'],
-                    ingredients: Array.isArray(item.ingredients) ? item.ingredients : [],
-                    steps: Array.isArray(item.steps) ? item.steps : ['Выложи в чашу и запекай до готовности.']
-                }));
+                const normalizedRecipes = parsedList.map((item, idx) => {
+                    const kcalVal = Number(item.kcal) || parseInt(item.calories, 10) || 190;
+                    const pVal = Number(item.protein) || 14;
+                    const fVal = Number(item.fat) || 8;
+                    const cVal = Number(item.carbs) || 15;
+                    return {
+                        id: `ai-${now}-${idx}`,
+                        title: item.title || 'Авторский рецепт от ИИ-Шефа',
+                        emoji: item.emoji || '✨',
+                        moods: ['all'],
+                        isAiGenerated: true,
+                        temp: Number(item.temp) || 185,
+                        time: Number(item.time) || 15,
+                        baseServings: Number(item.baseServings) || 2,
+                        calories: item.calories || `${Math.round(kcalVal)} ккал`,
+                        macros: { kcal: kcalVal, p: pVal, f: fVal, c: cVal },
+                        keywords: Array.isArray(item.keywords) ? item.keywords : ['ии', 'аэрогриль'],
+                        ingredients: Array.isArray(item.ingredients) ? item.ingredients : [],
+                        steps: Array.isArray(item.steps) ? item.steps : ['Выложи в чашу и запекай до готовности.']
+                    };
+                });
 
                 RECIPES.unshift(...normalizedRecipes);
                 state.aiRecipes = [...normalizedRecipes, ...state.aiRecipes].slice(0, 40);
@@ -2130,6 +2317,7 @@
 
                 resultsList.innerHTML = normalizedRecipes.map(recipe => {
                     const ingPreview = recipe.ingredients.slice(0, 4).map(i => i.name).join(' · ');
+                    const m = getRecipeMacros(recipe, false);
                     return `
                         <article
                             onclick="openRecipeModal('${recipe.id}')"
@@ -2144,7 +2332,7 @@
                                     <div class="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold">
                                         <span class="px-2 py-0.5 rounded-lg bg-orange-500/15 text-orange-400">🌡 ${recipe.temp}°C</span>
                                         <span class="px-2 py-0.5 rounded-lg bg-sky-500/15 text-sky-400">⏱ ${recipe.time} мин</span>
-                                        <span class="px-2 py-0.5 rounded-lg bg-slate-500/15 text-hint">🔥 ${recipe.calories}</span>
+                                        <span class="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-400">🔥 ${m.kcal} ккал · Б ${m.p} / Ж ${m.f} / У ${m.c}</span>
                                     </div>
                                     <p class="text-[11px] text-hint truncate mt-2">${ingPreview}</p>
                                 </div>
@@ -2235,6 +2423,7 @@
 
             haptic('medium');
             const factor = state.servings / (recipe.baseServings || 2);
+            const m = getRecipeMacros(recipe, true);
             const lines = [];
 
             recipe.ingredients.forEach((ing, idx) => {
@@ -2244,7 +2433,7 @@
                 lines.push(`• ${name} — ${formatAmount(ing.amount, factor)} ${ing.unit}`);
             });
 
-            const text = `🔥 ${recipe.title} (${recipe.temp}°C · ${recipe.time} мин · ${state.servings} порц.)\n\nСписок продуктов:\n${lines.join('\n')}`;
+            const text = `🔥 ${recipe.title} (${recipe.temp}°C · ${recipe.time} мин · ${state.servings} порц.)\n📊 КБЖУ на 100 г: ${m.kcal} ккал (Б ${m.p} г / Ж ${m.f} г / У ${m.c} г)\n\nСписок продуктов:\n${lines.join('\n')}`;
 
             try {
                 if (tg && tg.openTelegramLink) {
