@@ -2251,76 +2251,90 @@
             const currentTgUserId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id
                 ? String(tg.initDataUnsafe.user.id)
                 : '';
+            const currentTgInitData = tg && tg.initData ? String(tg.initData) : '';
 
-            if (isProxy && currentTgUserId) {
-                requestHeaders['X-Tg-User-Id'] = currentTgUserId;
+            if (isProxy) {
+                if (currentTgUserId) requestHeaders['X-Tg-User-Id'] = currentTgUserId;
+                if (currentTgInitData) requestHeaders['X-Tg-Init-Data'] = currentTgInitData;
             }
 
             try {
                 const response = await fetchWithExponentialBackoff(apiUrl, {
                     method: 'POST',
                     headers: requestHeaders,
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(isProxy ? { query: userQuery } : payload)
                 });
 
                 if (response.status === 403) {
                     throw new Error('ACCESS_DENIED');
                 }
 
+                if (response.status === 429) {
+                    throw new Error('RATE_LIMIT');
+                }
+
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    throw new Error(`HTTP_${response.status}`);
                 }
 
                 const result = await response.json();
-                const rawJson = result && result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts[0] ? result.candidates[0].content.parts[0].text : '';
-                if (!rawJson) {
-                    throw new Error('Пустой ответ от модели');
+                const rawText = result?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                const cleanedJson = rawText
+                    .replace(/^```json\s*/i, '')
+                    .replace(/```\s*$/i, '')
+                    .trim();
+
+                const parsed = JSON.parse(cleanedJson);
+                if (!Array.isArray(parsed) || parsed.length === 0) {
+                    throw new Error('EMPTY_AI_RESPONSE');
                 }
 
-                const parsedList = JSON.parse(rawJson);
-                if (!Array.isArray(parsedList) || parsedList.length === 0) {
-                    throw new Error('Некорректный формат рецептов');
-                }
-
-                const now = Date.now();
-                const normalizedRecipes = parsedList.map((item, idx) => {
-                    const kcalVal = Number(item.kcal) || parseInt(item.calories, 10) || 190;
-                    const pVal = Number(item.protein) || 14;
-                    const fVal = Number(item.fat) || 8;
-                    const cVal = Number(item.carbs) || 15;
+                const batchStamp = Date.now();
+                const newAiRecipes = parsed.slice(0, 3).map((item, idx) => {
+                    const kcalNum = Number(item.kcal) || parseInt(item.calories, 10) || 195;
                     return {
-                        id: `ai-${now}-${idx}`,
+                        id: `ai-${batchStamp}-${idx}`,
                         title: item.title || 'Авторский рецепт от ИИ-Шефа',
                         emoji: item.emoji || '✨',
                         moods: ['all'],
-                        isAiGenerated: true,
                         temp: Number(item.temp) || 185,
                         time: Number(item.time) || 15,
                         baseServings: Number(item.baseServings) || 2,
-                        calories: item.calories || `${Math.round(kcalVal)} ккал`,
-                        macros: { kcal: kcalVal, p: pVal, f: fVal, c: cVal },
-                        keywords: Array.isArray(item.keywords) ? item.keywords : ['ии', 'аэрогриль'],
-                        ingredients: Array.isArray(item.ingredients) ? item.ingredients : [],
-                        steps: Array.isArray(item.steps) ? item.steps : ['Выложи в чашу и запекай до готовности.']
+                        calories: item.calories || `${kcalNum} ккал`,
+                        macros: {
+                            kcal: kcalNum,
+                            p: Number(item.protein) || 16,
+                            f: Number(item.fat) || 8,
+                            c: Number(item.carbs) || 14
+                        },
+                        keywords: Array.isArray(item.keywords) ? item.keywords : [],
+                        ingredients: Array.isArray(item.ingredients)
+                            ? item.ingredients.map(ing => ({
+                                name: ing.name || 'Ингредиент',
+                                amount: Number(ing.amount) || 100,
+                                unit: ing.unit || 'г',
+                                category: ing.category || ''
+                            }))
+                            : [],
+                        steps: Array.isArray(item.steps) && item.steps.length > 0
+                            ? item.steps
+                            : ['Подготовь ингредиенты и выложи в корзину аэрогриля.', 'Готовь до золотистой корочки.'],
+                        isAiGenerated: true
                     };
                 });
 
-                RECIPES.unshift(...normalizedRecipes);
-                state.aiRecipes = [...normalizedRecipes, ...state.aiRecipes].slice(0, 40);
+                RECIPES.unshift(...newAiRecipes);
+                state.aiRecipes = [...newAiRecipes, ...state.aiRecipes].slice(0, 30);
                 try {
                     localStorage.setItem('airfryer_ai_recipes_v1', JSON.stringify(state.aiRecipes));
                 } catch (e) {}
 
-                renderRecipesFeed();
-                trackEvent('ai_generate', userQuery);
-                haptic('success');
-
-                resultsList.innerHTML = normalizedRecipes.map(recipe => {
-                    const ingPreview = recipe.ingredients.slice(0, 4).map(i => i.name).join(' · ');
+                resultsList.innerHTML = newAiRecipes.map(recipe => {
                     const m = getRecipeMacros(recipe, false);
+                    const ingPreview = recipe.ingredients.slice(0, 4).map(i => i.name).join(' · ');
                     return `
                         <article
-                            onclick="openRecipeModal('${recipe.id}')"
+                            onclick="closeAiModal(); openRecipeModal('${recipe.id}')"
                             class="surface-card rounded-2xl p-3.5 border-orange-500/30 active:scale-[0.99] transition cursor-pointer"
                         >
                             <div class="flex items-start gap-3">
@@ -2342,12 +2356,17 @@
                 }).join('');
 
                 resultsSection.classList.remove('hidden');
+                renderRecipesFeed();
+                haptic('success');
+                trackEvent('ai_generate', userQuery);
             } catch (err) {
                 haptic('error');
                 if (err && err.message === 'ACCESS_DENIED') {
-                    errorText.textContent = `Доступ к ИИ-Шефу открыт только для близких.${currentTgUserId ? ` Твой Telegram ID: ${currentTgUserId}` : ''} Вся база из 550+ рецептов доступна без ограничений.`;
+                    errorText.textContent = 'Запрос отклонён защитой сервера. Открой приложение через официального бота в Telegram.';
+                } else if (err && err.message === 'RATE_LIMIT') {
+                    errorText.textContent = 'Слишком много запросов подряд (лимит — 10 рецептов в минуту). Подожди минуту и попробуй снова.';
                 } else {
-                    errorText.textContent = 'Проверь интернет-соединение или ссылку AI_PROXY_URL в настройках. Вся офлайн-база из 550+ рецептов продолжает работать без ограничений.';
+                    errorText.textContent = 'Проверь интернет-соединение или настройки прокси. Вся офлайн-база из 550+ рецептов продолжает работать без ограничений.';
                 }
                 errorBox.classList.remove('hidden');
             } finally {
@@ -2357,47 +2376,60 @@
             }
         }
 
+        // =========================================================================
+        // 8. ВСТРОЕННЫЙ ТАЙМЕР С СИГНАЛОМ ВСТРЯХИВАНИЯ И ОТПРАВКА СПИСКА В TELEGRAM
+        // =========================================================================
         function startTimer() {
+            if (state.timerRunning) return;
             if (state.timerRemainingSec <= 0) {
                 state.timerRemainingSec = state.timerTotalSec;
                 state.shakeNotified = false;
             }
+
             haptic('medium');
             state.timerRunning = true;
-            updateTimerUI();
 
-            clearInterval(state.timerInterval);
+            const toggleBtn = document.getElementById('timer-toggle-btn');
+            if (toggleBtn) toggleBtn.textContent = 'Пауза';
+
+            const halfwaySec = Math.floor(state.timerTotalSec / 2);
+
             state.timerInterval = setInterval(() => {
-                state.timerRemainingSec -= 1;
+                state.timerRemainingSec = Math.max(0, state.timerRemainingSec - 1);
 
-                // Сигнал на 50% времени: встряхнуть корзину
-                const halfway = Math.floor(state.timerTotalSec / 2);
-                if (!state.shakeNotified && state.timerRemainingSec <= halfway && state.timerRemainingSec > 0) {
+                const displayEl = document.getElementById('timer-display');
+                if (displayEl) displayEl.textContent = formatTimer(state.timerRemainingSec);
+
+                if (!state.shakeNotified && halfwaySec > 15 && state.timerRemainingSec === halfwaySec) {
                     state.shakeNotified = true;
-                    haptic('warning');
                     playBeepSound(2);
-                    showToast('🔄 Половина времени! Встряхни корзину аэрогриля');
+                    haptic('warning');
                     const badge = document.getElementById('timer-halfway-badge');
                     if (badge) badge.classList.remove('hidden');
+                    showToast('🔄 Половина времени! Встряхни корзину аэрогриля');
                 }
 
                 if (state.timerRemainingSec <= 0) {
-                    state.timerRemainingSec = 0;
                     stopTimer(false);
-                    haptic('success');
                     playBeepSound(3);
-                    showToast('🔥 Готово! Приятного аппетита!');
+                    haptic('success');
+                    showToast('🎉 Готово! Блюдо в аэрогриле приготовилось');
                 }
-
-                updateTimerUI();
             }, 1000);
         }
 
-        function stopTimer(withHaptic = true) {
-            if (withHaptic) haptic('light');
+        function stopTimer(showMsg) {
+            if (state.timerInterval) {
+                clearInterval(state.timerInterval);
+                state.timerInterval = null;
+            }
             state.timerRunning = false;
-            clearInterval(state.timerInterval);
-            updateTimerUI();
+            const toggleBtn = document.getElementById('timer-toggle-btn');
+            if (toggleBtn) toggleBtn.textContent = 'Старт';
+            if (showMsg) {
+                haptic('light');
+                showToast('Таймер на паузе');
+            }
         }
 
         function resetTimer() {
@@ -2405,16 +2437,11 @@
             stopTimer(false);
             state.timerRemainingSec = state.timerTotalSec;
             state.shakeNotified = false;
+            const displayEl = document.getElementById('timer-display');
             const badge = document.getElementById('timer-halfway-badge');
+            if (displayEl) displayEl.textContent = formatTimer(state.timerRemainingSec);
             if (badge) badge.classList.add('hidden');
-            updateTimerUI();
-        }
-
-        function updateTimerUI() {
-            const display = document.getElementById('timer-display');
-            const btn = document.getElementById('timer-toggle-btn');
-            if (display) display.textContent = formatTimer(state.timerRemainingSec);
-            if (btn) btn.textContent = state.timerRunning ? 'Пауза' : 'Старт';
+            showToast('Таймер сброшен');
         }
 
         function shareShoppingList() {
@@ -2423,41 +2450,56 @@
 
             haptic('medium');
             const factor = state.servings / (recipe.baseServings || 2);
-            const m = getRecipeMacros(recipe, true);
-            const lines = [];
+            const macrosData = getRecipeMacros(recipe, true);
 
+            const activeLines = [];
             recipe.ingredients.forEach((ing, idx) => {
                 const mod = state.ingMods[idx];
                 if (mod && mod.status === 'removed') return;
-                const name = (mod && mod.status === 'replaced') ? `${mod.replacement} (вместо: ${ing.name})` : ing.name;
-                lines.push(`• ${name} — ${formatAmount(ing.amount, factor)} ${ing.unit}`);
+                const label = mod && mod.status === 'replaced' ? `${mod.replacement} (вместо: ${ing.name})` : ing.name;
+                const amountStr = `${formatAmount(ing.amount, factor)} ${ing.unit}`.trim();
+                activeLines.push(`• ${label} — ${amountStr}`);
             });
 
-            const text = `🔥 ${recipe.title} (${recipe.temp}°C · ${recipe.time} мин · ${state.servings} порц.)\n📊 КБЖУ на 100 г: ${m.kcal} ккал (Б ${m.p} г / Ж ${m.f} г / У ${m.c} г)\n\nСписок продуктов:\n${lines.join('\n')}`;
+            const shareText = [
+                `${recipe.emoji} ${recipe.title}`,
+                `🌡 ${recipe.temp}°C · ⏱ ${recipe.time} мин · 🍽 ${state.servings} порц.`,
+                `📊 КБЖУ на 100 г: ${macrosData.kcal} ккал (Б ${macrosData.p} / Ж ${macrosData.f} / У ${macrosData.c})`,
+                '',
+                '🛒 Список продуктов:',
+                ...activeLines
+            ].join('\n');
 
             try {
-                if (tg && tg.openTelegramLink) {
-                    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(' ')}&text=${encodeURIComponent(text)}`;
+                if (tg && typeof tg.openTelegramLink === 'function') {
+                    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(' ')}&text=${encodeURIComponent(shareText)}`;
                     tg.openTelegramLink(shareUrl);
                     return;
                 }
             } catch (e) {}
 
-            // Fallback копирование в буфер обмена
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            showToast('Список продуктов скопирован 📋');
+            // Резервное копирование в буфер обмена для браузера
+            try {
+                const tempArea = document.createElement('textarea');
+                tempArea.value = shareText;
+                tempArea.style.position = 'fixed';
+                tempArea.style.opacity = '0';
+                document.body.appendChild(tempArea);
+                tempArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempArea);
+                showToast('📋 Список продуктов скопирован в буфер обмена');
+            } catch (e) {
+                showToast('Не удалось скопировать список');
+            }
         }
 
         // =========================================================================
-        // 8. ПЛАВНЫЙ ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ КОЛЁСИКОМ И ПЕРЕТАСКИВАНИЕМ МЫШИ
+        // 9. ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ МЕНЮ ДЛЯ СМАРТФОНА И МЫШИ
         // =========================================================================
         function enableHorizontalScrollEnhancements() {
-            document.querySelectorAll('.horizontal-scroll').forEach(el => {
+            const containers = document.querySelectorAll('.horizontal-scroll');
+            containers.forEach(el => {
                 el.addEventListener('wheel', e => {
                     if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
                         e.preventDefault();
@@ -2490,23 +2532,23 @@
                     if (!isDown) return;
                     e.preventDefault();
                     const x = e.pageX - el.offsetLeft;
-                    const walk = (x - startX) * 1.5;
+                    const walk = (x - startX) * 1.4;
                     el.scrollLeft = scrollLeft - walk;
                 });
             });
         }
 
         // =========================================================================
-        // 9. ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
+        // 10. ЗАПУСК ПРИЛОЖЕНИЯ ПОСЛЕ ЗАГРУЗКИ ОКНА
         // =========================================================================
-        document.addEventListener('DOMContentLoaded', () => {
+        window.onload = function () {
             initTelegram();
             updateFavoritesBadge();
             renderMoodChips();
             renderRecipesFeed();
             enableHorizontalScrollEnhancements();
-            trackEvent('app_open', `Всего рецептов: ${RECIPES.length}`);
-        });
+            trackEvent('app_open', `recipes_total:${RECIPES.length}`);
+        };
     </script>
 </body>
 </html>
