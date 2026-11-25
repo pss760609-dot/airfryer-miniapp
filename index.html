@@ -2190,58 +2190,65 @@
             generateBtn.disabled = true;
             generateBtn.classList.add('opacity-60');
 
-            // 1. Основной запрос через защищённый Cloudflare Worker (с авто-повтором при временной перегрузке 503)
-            if (AI_PROXY_URL) {
-                const headers = { 'Content-Type': 'application/json' };
-                if (currentTgUserId) headers['X-Tg-User-Id'] = currentTgUserId;
-                if (currentTgInitData) headers['X-Tg-Init-Data'] = currentTgInitData;
-
-                for (let attempt = 0; attempt < 2; attempt++) {
-                    try {
-                        response = await fetchWithTimeout(AI_PROXY_URL, {
-                            method: 'POST',
-                            headers,
-                            body: JSON.stringify({ query: userQuery })
-                        }, 35000);
-
-                        if (response && response.status === 503 && attempt === 0) {
-                            await new Promise(r => setTimeout(r, 1500));
-                            continue;
-                        }
-                        break;
-                    } catch (err) {
-                        lastErr = err;
-                        response = null;
-                    }
-                }
-            }
-
-            // 2. Запасной канал через Google Apps Script — только если Cloudflare заблокирован сетью и в скрипте включён ai_chef
-            if (!response && ANALYTICS_WEBHOOK_URL) {
-                try {
-                    const gasResponse = await fetchWithTimeout(ANALYTICS_WEBHOOK_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({
-                            action: 'ai_chef',
-                            query: userQuery,
-                            userId: currentTgUserId
-                        })
-                    }, 30000);
-
-                    if (gasResponse && gasResponse.ok) {
-                        const clonedText = await gasResponse.clone().text();
-                        if (clonedText.includes('candidates')) {
-                            response = gasResponse;
-                            lastErr = null;
-                        }
-                    }
-                } catch (gasErr) {
-                    if (!lastErr) lastErr = gasErr;
-                }
-            }
-
             try {
+                let response = null;
+                let lastErr = null;
+                const currentTgUserId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id
+                    ? String(tg.initDataUnsafe.user.id)
+                    : '';
+                const currentTgInitData = tg && tg.initData ? String(tg.initData) : '';
+
+                // 1. Основной запрос через защищённый Cloudflare Worker (с авто-повтором при временной перегрузке 503)
+                if (AI_PROXY_URL) {
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (currentTgUserId) headers['X-Tg-User-Id'] = currentTgUserId;
+                    if (currentTgInitData) headers['X-Tg-Init-Data'] = currentTgInitData;
+
+                    for (let attempt = 0; attempt < 3; attempt++) {
+                        try {
+                            response = await fetchWithTimeout(AI_PROXY_URL, {
+                                method: 'POST',
+                                headers,
+                                body: JSON.stringify({ query: userQuery })
+                            }, 35000);
+
+                            if (response && response.status === 503 && attempt < 2) {
+                                await new Promise(r => setTimeout(r, 1200));
+                                continue;
+                            }
+                            break;
+                        } catch (err) {
+                            lastErr = err;
+                            response = null;
+                        }
+                    }
+                }
+
+                // 2. Запасной канал через Google Apps Script — только если Cloudflare недоступен и в скрипте включён ai_chef
+                if (!response && ANALYTICS_WEBHOOK_URL) {
+                    try {
+                        const gasResponse = await fetchWithTimeout(ANALYTICS_WEBHOOK_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({
+                                action: 'ai_chef',
+                                query: userQuery,
+                                userId: currentTgUserId
+                            })
+                        }, 30000);
+
+                        if (gasResponse && gasResponse.ok) {
+                            const clonedText = await gasResponse.clone().text();
+                            if (clonedText.includes('candidates')) {
+                                response = gasResponse;
+                                lastErr = null;
+                            }
+                        }
+                    } catch (gasErr) {
+                        if (!lastErr) lastErr = gasErr;
+                    }
+                }
+
                 if (!response) {
                     throw lastErr || new Error('NETWORK_TIMEOUT');
                 }
@@ -2355,7 +2362,7 @@
                 if ((err && err.name === 'AbortError') || msg === 'NETWORK_TIMEOUT') {
                     errorText.textContent = 'ИИ-Шеф не успел ответить за 35 секунд (возможно, нестабильный VPN или сеть). Попробуй ещё раз.';
                 } else if (msg === 'ACCESS_DENIED_403') {
-                    errorText.textContent = 'Сервер Cloudflare отклонил запрос (код 403). Проверь, что в воркере разрешён заголовок Origin или отключена строгая проверка Origin.';
+                    errorText.textContent = 'Сервер Cloudflare отклонил запрос (код 403). Проверь настройки Origin или ALLOWED_IDS в воркере.';
                 } else if (msg === 'RATE_LIMIT_429') {
                     errorText.textContent = 'Слишком много запросов подряд (лимит — 10 рецептов в минуту). Подожди минуту и попробуй снова.';
                 } else if (msg === 'OVERLOADED_503') {
