@@ -2,33 +2,25 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Аэрогриль · По настроению</title>
-    
-    <!-- Telegram Mini App SDK -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Аэрогриль · Рецепты по настроению</title>
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <style>
-        /* Адаптация под переменные темы Telegram с тёмным фолбэком по умолчанию */
         :root {
-            --bg-primary: var(--tg-theme-bg-color, #121417);
-            --bg-secondary: var(--tg-theme-secondary-bg-color, #1c1f24);
-            --text-primary: var(--tg-theme-text-color, #f4f5f7);
-            --text-hint: var(--tg-theme-hint-color, #8e96a4);
-            --tg-btn-bg: var(--tg-theme-button-color, #ff6b35);
-            --tg-btn-text: var(--tg-theme-button-text-color, #ffffff);
-            --accent: #ff6b35;
-            --accent-hover: #ff7f50;
-            --accent-soft: rgba(255, 107, 53, 0.14);
-            --border-subtle: rgba(142, 150, 164, 0.16);
+            --bg-color: var(--tg-theme-bg-color, #0f172a);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #1e293b);
+            --text-color: var(--tg-theme-text-color, #f8fafc);
+            --hint-color: var(--tg-theme-hint-color, #94a3b8);
+            --accent-color: var(--tg-theme-button-color, #f97316);
+            --accent-text: var(--tg-theme-button-text-color, #ffffff);
+            --card-border: rgba(148, 163, 184, 0.16);
         }
 
         * {
@@ -36,1508 +28,1958 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        html, body {
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
             padding: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
             overflow-x: hidden;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
+            user-select: none;
         }
 
-        /* Утилиты для использования CSS-переменных темы */
-        .bg-app { background-color: var(--bg-primary); }
-        .bg-card { background-color: var(--bg-secondary); }
-        .text-app { color: var(--text-primary); }
-        .text-hint { color: var(--text-hint); }
-        .border-subtle { border-color: var(--border-subtle); }
+        .surface-card {
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--card-border);
+        }
 
-        .bg-accent { background-color: var(--accent); color: #ffffff; }
-        .bg-accent-soft { background-color: var(--accent-soft); color: var(--accent); }
-        .text-accent { color: var(--accent); }
+        .text-hint {
+            color: var(--hint-color);
+        }
 
-        /* Скрытие полосы прокрутки для горизонтального списка настроений */
-        .no-scrollbar::-webkit-scrollbar {
+        .btn-accent {
+            background-color: var(--accent-color);
+            color: var(--accent-text);
+        }
+
+        /* Горизонтальный скролл ленты меню без полосы прокрутки */
+        .horizontal-scroll {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            cursor: grab;
+        }
+
+        .horizontal-scroll::-webkit-scrollbar {
             display: none;
         }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+
+        .horizontal-scroll.grabbing {
+            cursor: grabbing;
         }
 
-        /* Плавная анимация появления карточек и модального окна */
-        @keyframes fadeSlideUp {
+        .chip-item {
+            flex: 0 0 auto;
+            white-space: nowrap;
+            transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .chip-item:active {
+            transform: scale(0.96);
+        }
+
+        /* Плавное появление модального окна */
+        @keyframes slideUp {
             from {
+                transform: translateY(24px);
                 opacity: 0;
-                transform: translateY(10px);
             }
             to {
-                opacity: 1;
                 transform: translateY(0);
+                opacity: 1;
             }
         }
 
-        .animate-card {
-            animation: fadeSlideUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        .modal-animate {
+            animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* Shimmer-скелетон для загрузки ИИ-рецептов */
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.65; }
         }
 
-        .skeleton {
-            background: linear-gradient(
-                90deg,
-                var(--bg-secondary) 25%,
-                rgba(142, 150, 164, 0.14) 50%,
-                var(--bg-secondary) 75%
-            );
-            background-size: 200% 100%;
-            animation: shimmer 1.4s infinite linear;
-        }
-
-        /* Учёт безопасных зон iOS / Android в Telegram */
-        .safe-top {
-            padding-top: max(12px, env(safe-area-inset-top));
-        }
-        .safe-bottom {
-            padding-bottom: max(16px, env(safe-area-inset-bottom));
+        .shake-alert-pulse {
+            animation: pulseGlow 1.4s infinite;
         }
     </style>
 </head>
-<body class="bg-app text-app select-none">
+<body class="min-h-screen pb-24">
 
-    <!-- Всплывающее уведомление (замена alert) -->
-    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[70] pointer-events-none opacity-0 transition-all duration-200 transform -translate-y-2">
-        <div id="toast-text" class="px-4 py-2 rounded-full text-xs font-medium shadow-lg bg-card border border-subtle text-app backdrop-blur-md">
-            Сохранено в избранное
-        </div>
-    </div>
-
-    <!-- Главный контейнер приложения -->
-    <div id="app" class="max-w-xl mx-auto min-h-screen flex flex-col">
-
-        <!-- Верхняя панель навигации -->
-        <header class="sticky top-0 z-30 bg-app/90 backdrop-blur-md border-b border-subtle safe-top px-4 pb-3">
-            <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-2 min-w-0">
-                    <span class="text-xl leading-none" aria-hidden="true">🔥</span>
-                    <h1 class="text-base sm:text-lg font-bold tracking-tight truncate">
-                        Аэрогриль · По настроению
-                    </h1>
+    <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+    <header class="sticky top-0 z-30 backdrop-blur-md bg-opacity-90 border-b border-slate-700/30 px-4 pt-3 pb-3" style="background-color: var(--bg-color);">
+        <div class="max-w-xl mx-auto">
+            <div class="flex items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-9 h-9 rounded-xl btn-accent flex items-center justify-center text-lg shadow-md shrink-0">
+                        🔥
+                    </div>
+                    <div class="min-w-0">
+                        <h1 class="text-base font-bold leading-tight truncate">Аэрогриль Шеф</h1>
+                        <p id="user-greeting" class="text-xs text-hint truncate">Выбери настроение или продукт</p>
+                    </div>
                 </div>
 
-                <!-- Сегментированный переключатель вкладок -->
-                <div class="flex items-center bg-card p-1 rounded-xl border border-subtle shrink-0" role="tablist">
-                    <button
-                        id="tab-discover"
-                        type="button"
-                        role="tab"
-                        aria-selected="true"
-                        onclick="switchTab('discover')"
-                        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-accent text-white shadow-sm"
-                    >
-                        Подбор
+                <div class="flex items-center gap-2 shrink-0">
+                    <!-- Кнопка-рулетка "Выбери за меня" -->
+                    <button id="random-btn" type="button" onclick="pickRandomRecipe()" class="surface-card px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 active:scale-95 transition" title="Случайный рецепт">
+                        <span>🎲</span>
+                        <span class="hidden sm:inline">Удиви</span>
                     </button>
-                    <button
-                        id="tab-favorites"
-                        type="button"
-                        role="tab"
-                        aria-selected="false"
-                        onclick="switchTab('favorites')"
-                        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-hint flex items-center gap-1.5"
-                    >
-                        <span>Избранное</span>
-                        <span id="fav-badge" class="hidden px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-accent-soft">0</span>
+
+                    <!-- Кнопка Избранного -->
+                    <button id="fav-filter-btn" type="button" onclick="toggleFavoritesView()" class="surface-card px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 active:scale-95 transition">
+                        <span id="fav-heart-icon">🤍</span>
+                        <span id="fav-count" class="font-bold">0</span>
                     </button>
                 </div>
             </div>
-        </header>
 
-        <!-- Секция: ПОДБОР РЕЦЕПТОВ -->
-        <main id="view-discover" class="flex-1 flex flex-col">
-            <!-- Поиск и чипсы настроений -->
-            <section class="px-4 pt-3 pb-2 space-y-3">
-                <form id="search-form" onsubmit="handleSearchSubmit(event)" class="relative flex items-center">
-                    <div class="absolute left-3.5 text-hint pointer-events-none">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/>
-                        </svg>
-                    </div>
-                    <input
-                        id="search-input"
-                        type="text"
-                        autocomplete="off"
-                        enterkeyhint="search"
-                        placeholder="Что хочется? Например: курица, под пиво, быстро, остро..."
-                        oninput="handleSearchInput(this.value)"
-                        class="w-full bg-card text-app placeholder:text-hint text-sm pl-10 pr-20 py-3 rounded-2xl border border-subtle focus:outline-none focus:border-[#ff6b35] transition-colors"
-                    />
-                    <div class="absolute right-2 flex items-center gap-1">
-                        <button
-                            id="clear-btn"
-                            type="button"
-                            onclick="clearSearch()"
-                            aria-label="Очистить поиск"
-                            class="hidden p-1.5 rounded-xl text-hint hover:text-app transition-colors"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                        <button
-                            type="submit"
-                            aria-label="Найти рецепты"
-                            class="px-3 py-1.5 rounded-xl bg-accent text-xs font-semibold active:scale-95 transition-transform"
-                        >
-                            Найти
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Горизонтальная лента чипсов настроений -->
-                <div id="mood-chips" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4">
-                    <!-- Чипсы рендерятся через JS -->
-                </div>
-            </section>
-
-            <!-- Статус-строка текущей подборки -->
-            <div class="px-4 py-1.5 flex items-center justify-between text-xs text-hint">
-                <span id="results-label">Популярное для аэрогриля</span>
-                <span id="source-pill" class="hidden items-center gap-1 px-2 py-0.5 rounded-full bg-accent-soft text-[11px] font-medium">
-                    ✨ ИИ-шеф
-                </span>
-            </div>
-
-            <!-- Список карточек рецептов -->
-            <section id="recipes-list" class="px-4 pb-6 space-y-3 flex-1">
-                <!-- Карточки рендерятся через JS -->
-            </section>
-
-            <!-- Кнопка генерации дополнительных вариантов -->
-            <div id="load-more-wrap" class="px-4 pb-8 safe-bottom">
-                <button
-                    id="load-more-btn"
-                    type="button"
-                    onclick="handleGenerateMore()"
-                    class="w-full py-3.5 px-4 rounded-2xl bg-card border border-subtle text-sm font-semibold text-app flex items-center justify-center gap-2 active:scale-[0.98] transition-all hover:border-[#ff6b35]/50"
-                >
-                    <span>🔄</span>
-                    <span>Ещё варианты</span>
+            <!-- ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА ПОИСКА -->
+            <div class="grid grid-cols-2 gap-1.5 p-1 rounded-xl surface-card mb-2.5">
+                <button id="mode-name-btn" type="button" onclick="setSearchMode('name')" class="py-1.5 px-3 rounded-lg text-xs font-semibold transition btn-accent">
+                    🔍 По блюду / слову
+                </button>
+                <button id="mode-fridge-btn" type="button" onclick="setSearchMode('fridge')" class="py-1.5 px-3 rounded-lg text-xs font-semibold transition text-hint">
+                    🧊 Из холодильника
                 </button>
             </div>
-        </main>
 
-        <!-- Секция: ИЗБРАННОЕ -->
-        <main id="view-favorites" class="hidden flex-1 flex-col px-4 pt-3 pb-8 safe-bottom">
-            <div id="favorites-list" class="space-y-3">
-                <!-- Избранные рецепты рендерятся через JS -->
+            <!-- ПОЛЕ ПОИСКА -->
+            <div class="relative">
+                <input
+                    id="search-input"
+                    type="text"
+                    autocomplete="off"
+                    placeholder="Например: шарлотка, запеканка, крылышки..."
+                    oninput="handleSearchInput(this.value)"
+                    class="w-full surface-card rounded-xl pl-3.5 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/70 transition"
+                    style="color: var(--text-color);"
+                >
+                <button
+                    id="clear-search-btn"
+                    type="button"
+                    onclick="clearSearch()"
+                    class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-500/20 text-xs flex items-center justify-center text-hint hover:text-white"
+                >
+                    ✕
+                </button>
             </div>
-        </main>
-    </div>
 
-    <!-- Полноэкранный детальный просмотр рецепта -->
-    <div
-        id="recipe-modal"
-        class="fixed inset-0 z-50 bg-app hidden flex-col overflow-hidden"
-        role="dialog"
-        aria-modal="true"
-    >
-        <!-- Шапка детального окна -->
-        <div class="sticky top-0 z-10 bg-app/90 backdrop-blur-md border-b border-subtle safe-top px-4 pb-3 flex items-center justify-between gap-3">
-            <button
-                type="button"
-                onclick="closeRecipeModal()"
-                class="flex items-center gap-1.5 py-1.5 px-2.5 -ml-2 rounded-xl text-sm font-semibold text-accent active:scale-95 transition-transform"
-            >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M15 19l-7-7 7-7"/>
-                </svg>
-                <span>Назад</span>
+            <!-- БЫСТРЫЕ ПРОДУКТЫ (ПОКАЗЫВАЮТСЯ В РЕЖИМЕ ХОЛОДИЛЬНИКА) -->
+            <div id="fridge-chips-wrapper" class="hidden mt-2.5">
+                <div id="fridge-chips" class="horizontal-scroll gap-1.5 pb-0.5"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="max-w-xl mx-auto px-4 pt-3">
+        <!-- ГОРИЗОНТАЛЬНОЕ СКРОЛЛ-МЕНЮ НАСТРОЕНИЙ -->
+        <section id="mood-section" class="mb-4">
+            <div id="mood-chips" class="horizontal-scroll gap-2 py-1"></div>
+        </section>
+
+        <!-- СЧЁТЧИК РЕЗУЛЬТАТОВ И СБРОС -->
+        <div class="flex items-center justify-between mb-3">
+            <p id="results-label" class="text-xs font-medium text-hint">Загружаем рецепты...</p>
+            <button id="reset-filters-btn" type="button" onclick="resetAllFilters()" class="hidden text-xs font-semibold text-orange-400">
+                Сбросить фильтры
             </button>
-            <span class="text-xs font-medium text-hint truncate">Рецепт для аэрогриля</span>
-            <div class="w-14"></div>
         </div>
 
-        <!-- Прокручиваемый контент рецепта -->
-        <div id="modal-scroll-area" class="flex-1 overflow-y-auto px-4 pt-4 pb-28 space-y-5">
-            <!-- Заголовок и ключевые параметры -->
-            <div class="space-y-3">
-                <div class="flex items-start gap-3.5">
-                    <div id="modal-emoji" class="w-14 h-14 rounded-2xl bg-card border border-subtle flex items-center justify-center text-3xl shrink-0">
-                        🍗
-                    </div>
-                    <div class="space-y-1.5 min-w-0">
-                        <div id="modal-tags" class="flex flex-wrap gap-1.5"></div>
-                        <h2 id="modal-title" class="text-xl font-extrabold leading-snug tracking-tight">
-                            Название блюда
-                        </h2>
-                    </div>
-                </div>
+        <!-- СЕТКА КАРТОЧЕК РЕЦЕПТОВ -->
+        <div id="recipes-grid" class="grid grid-cols-1 gap-3"></div>
 
-                <p id="modal-desc" class="text-sm text-hint leading-relaxed">
-                    Описание блюда
-                </p>
+        <!-- ПУСТОЕ СОСТОЯНИЕ -->
+        <div id="empty-state" class="hidden text-center py-12 px-4 surface-card rounded-2xl mt-2">
+            <div class="text-4xl mb-2">🍳</div>
+            <h3 class="text-base font-bold mb-1">Ничего не нашлось</h3>
+            <p class="text-xs text-hint mb-4">Попробуй другое слово (например: «шарлотка», «картошка», «курица») или выбери случайный рецепт.</p>
+            <button type="button" onclick="pickRandomRecipe()" class="btn-accent px-4 py-2.5 rounded-xl text-xs font-bold shadow">
+                🎲 Подобрать случайное блюдо
+            </button>
+        </div>
+    </main>
 
-                <!-- Плашки: Температура, Время, Сложность -->
-                <div class="grid grid-cols-3 gap-2 pt-1">
-                    <div class="bg-card border border-subtle rounded-2xl p-3 text-center">
-                        <div class="text-[11px] text-hint font-medium mb-0.5">Температура</div>
-                        <div id="modal-temp" class="text-sm font-bold text-accent tabular-nums">190°C</div>
-                    </div>
-                    <div class="bg-card border border-subtle rounded-2xl p-3 text-center">
-                        <div class="text-[11px] text-hint font-medium mb-0.5">Время</div>
-                        <div id="modal-time" class="text-sm font-bold text-app tabular-nums">15 мин</div>
-                    </div>
-                    <div class="bg-card border border-subtle rounded-2xl p-3 text-center">
-                        <div class="text-[11px] text-hint font-medium mb-0.5">Сложность</div>
-                        <div id="modal-difficulty" class="text-sm font-bold text-app">Легко</div>
-                    </div>
-                </div>
-            </div>
+    <!-- МОДАЛЬНОЕ ОКНО РЕЦЕПТА -->
+    <div id="recipe-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" style="background-color: var(--bg-color);">
+        <div class="max-w-xl mx-auto min-h-screen pb-28 modal-animate">
+            <!-- Шапка модального окна -->
+            <div class="sticky top-0 z-20 flex items-center justify-between px-4 py-3 border-b border-slate-700/30 backdrop-blur-md" style="background-color: var(--bg-color);">
+                <button type="button" onclick="closeRecipeModal()" class="surface-card px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 active:scale-95 transition">
+                    <span>←</span>
+                    <span>Назад</span>
+                </button>
 
-            <!-- Интерактивный список ингредиентов -->
-            <section class="space-y-2.5">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-base font-bold">Ингредиенты</h3>
-                    <button
-                        id="reset-ingredients-btn"
-                        type="button"
-                        onclick="resetCheckedIngredients()"
-                        class="hidden text-xs font-medium text-accent"
-                    >
-                        Сбросить отметки
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="shareShoppingList()" class="surface-card px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 active:scale-95 transition">
+                        <span>📤</span>
+                        <span>Список в TG</span>
+                    </button>
+                    <button id="modal-fav-btn" type="button" onclick="toggleModalFavorite()" class="surface-card w-9 h-9 rounded-xl flex items-center justify-center text-base active:scale-95 transition">
+                        🤍
                     </button>
                 </div>
-                <p class="text-xs text-hint">Нажимай на продукты, чтобы отмечать купленное или подготовленное</p>
-                <div id="modal-ingredients" class="bg-card border border-subtle rounded-2xl divide-y divide-white/5 overflow-hidden">
-                    <!-- Ингредиенты рендерятся через JS -->
-                </div>
-            </section>
-
-            <!-- Пошаговая инструкция -->
-            <section class="space-y-3">
-                <h3 class="text-base font-bold">Как готовить в аэрогриле</h3>
-                <ol id="modal-steps" class="space-y-2.5">
-                    <!-- Шаги рендерятся через JS -->
-                </ol>
-            </section>
-
-            <!-- Блок Лайфхак -->
-            <section class="rounded-2xl p-4 bg-accent-soft border border-[#ff6b35]/30 space-y-1.5">
-                <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent">
-                    <span>💡</span>
-                    <span>Лайфхак для аэрогриля</span>
-                </div>
-                <p id="modal-tip" class="text-sm text-app leading-relaxed">
-                    Совет по приготовлению
-                </p>
-            </section>
-        </div>
-
-        <!-- Нижняя фиксированная панель с кнопкой Избранного -->
-        <div class="fixed bottom-0 inset-x-0 z-20 bg-app/95 backdrop-blur-md border-t border-subtle px-4 pt-3 safe-bottom">
-            <div class="max-w-xl mx-auto">
-                <button
-                    id="modal-fav-btn"
-                    type="button"
-                    onclick="toggleCurrentFavorite()"
-                    class="w-full py-3.5 px-5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg"
-                >
-                    <!-- Текст обновляется динамически -->
-                </button>
             </div>
+
+            <!-- Тело рецепта -->
+            <div id="modal-body" class="px-4 pt-4 space-y-4"></div>
         </div>
     </div>
+
+    <!-- ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ (TOAST) -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-xl bg-slate-800 text-white border border-slate-600/50 whitespace-nowrap"></div>
 
     <script>
         // =========================================================================
-        // 1. ИНИЦИАЛИЗАЦИЯ TELEGRAM WEBAPP SDK
+        // 0. АНАЛИТИКА ПОСЕТИТЕЛЕЙ (ВСТАВЬ СЮДА ССЫЛКУ ИЗ GOOGLE APPS SCRIPT)
+        // =========================================================================
+        const ANALYTICS_WEBHOOK_URL = '';
+
+        // =========================================================================
+        // 1. TELEGRAM WEBAPP SDK И АДАПТАЦИЯ ТЕМЫ
         // =========================================================================
         const tg = window.Telegram?.WebApp;
 
-        function initTelegramWebApp() {
-            if (!tg) return;
+        function haptic(type = 'light') {
             try {
+                if (!tg?.HapticFeedback) return;
+                if (['light', 'medium', 'heavy', 'rigid', 'soft'].includes(type)) {
+                    tg.HapticFeedback.impactOccurred(type);
+                } else if (['error', 'success', 'warning'].includes(type)) {
+                    tg.HapticFeedback.notificationOccurred(type);
+                } else {
+                    tg.HapticFeedback.selectionChanged();
+                }
+            } catch (e) {}
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            clearTimeout(window.__toastTimer);
+            window.__toastTimer = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2600);
+        }
+
+        function initTelegram() {
+            try {
+                if (!tg) return;
                 tg.ready();
                 tg.expand();
 
-                // Синхронизация цвета шапки и фона с темой Telegram
-                if (tg.themeParams?.bg_color) {
-                    tg.setHeaderColor?.(tg.themeParams.bg_color);
-                    tg.setBackgroundColor?.(tg.themeParams.bg_color);
+                const user = tg.initDataUnsafe?.user;
+                if (user?.first_name) {
+                    const greetingEl = document.getElementById('user-greeting');
+                    if (greetingEl) {
+                        greetingEl.textContent = `Привет, ${user.first_name}! Что приготовим?`;
+                    }
                 }
 
-                // Подписка на системную кнопку "Назад" в Telegram
-                tg.BackButton?.onClick(() => {
-                    if (state.selectedRecipe) {
-                        closeRecipeModal();
-                    }
-                });
-            } catch (e) {
-                // Игнорируем в обычном браузере
-            }
-        }
-
-        function triggerHaptic(style = 'light') {
-            try {
-                tg?.HapticFeedback?.impactOccurred?.(style);
+                if (tg.BackButton) {
+                    tg.BackButton.onClick(() => {
+                        if (!document.getElementById('recipe-modal').classList.contains('hidden')) {
+                            closeRecipeModal();
+                        }
+                    });
+                }
             } catch (e) {}
         }
 
         // =========================================================================
-        // 2. КОНФИГУРАЦИЯ НАСТРОЕНИЙ И ВСТРОЕННАЯ БАЗА РЕЦЕПТОВ (18 РЕЦЕПТОВ)
+        // 2. БАЗА РЕЦЕПТОВ ДЛЯ АЭРОГРИЛЯ + УМНЫЕ ЗАМЕНЫ ИНГРЕДИЕНТОВ
         // =========================================================================
-        const MOODS = [
-            { id: 'any', label: '🎲 Любое / Удиви', promptHint: 'разнообразные, интересные и аппетитные блюда' },
-            { id: 'fast', label: '⚡ Быстро (до 15 мин)', promptHint: 'очень быстрые рецепты со временем приготовления до 15 минут' },
-            { id: 'beer', label: '🍺 Под пиво и хруст', promptHint: 'хрустящие закуски, крылышки, снеки идеально подходящие под пиво' },
-            { id: 'hearty', label: '🥩 Сытно и мясисто', promptHint: 'сытные мясные основные блюда с румяной корочкой' },
-            { id: 'light', label: '🥗 Легко и ПП', promptHint: 'лёгкие, полезные блюда с минимумом масла, богатые белком или овощами' },
-            { id: 'lazy', label: '😴 Максимально лениво', promptHint: 'максимально ленивые рецепты из 3-4 простых ингредиентов без долгой подготовки' },
-            { id: 'spicy', label: '🌶 Остренькое', promptHint: 'пикантные и острые блюда со специями, чили, шрирачей или чесноком' },
-            { id: 'snacks', label: '🍟 Гарниры и снеки', promptHint: 'гарниры, картофель, овощи, горячие бутерброды и перекусы' }
+        const MOOD_CATEGORIES = [
+            { id: 'all', label: '🎲 Все / Удиви' },
+            { id: 'quick', label: '⚡ Быстро (до 15 мин)' },
+            { id: 'crispy', label: '🍺 Под кино и хруст' },
+            { id: 'dinner', label: '🍖 Сытный ужин' },
+            { id: 'baking', label: '🥧 Выпечка и десерты' },
+            { id: 'light', label: '🥗 Полегче / ПП' },
+            { id: 'breakfast', label: '🍳 Завтрак' }
         ];
 
-        const OFFLINE_RECIPES = [
+        const QUICK_FRIDGE_ITEMS = [
+            'Курица', 'Картошка', 'Творог', 'Яблоки', 'Яйца',
+            'Сыр', 'Фарш', 'Пельмени', 'Хлеб', 'Лосось',
+            'Кабачок', 'Грибы', 'Креветки', 'Сосиски'
+        ];
+
+        // Справочник замен ингредиентов для аэрогриля
+        const INGREDIENT_SUBSTITUTES = {
+            'сметана': [
+                { name: 'Греческий йогурт', tip: 'Отлично держит форму при запекании' },
+                { name: 'Майонез', tip: 'Даст более румяную и жирную корочку' },
+                { name: 'Кефир или ряженка', tip: 'Сделает тесто чуть нежнее' }
+            ],
+            'майонез': [
+                { name: 'Сметана + капля горчицы', tip: 'Менее жирно, но вкусно подрумянится' },
+                { name: 'Греческий йогурт', tip: 'Лёгкий ПП-вариант' },
+                { name: 'Растительное масло 1 ст.л.', tip: 'Для хрустящей золотистой корочки' }
+            ],
+            'масло': [
+                { name: 'Сливочное растопленное масло', tip: 'Даст сливочный аромат' },
+                { name: 'Сбрызнуть водой + пергамент', tip: 'Без масла, но нужен пергамент с перфорацией' }
+            ],
+            'панировочные сухари': [
+                { name: 'Измельчённые кукурузные хлопья', tip: 'Супер-хруст в аэрогриле!' },
+                { name: 'Овсяные хлопья (перемолотые)', tip: 'Полезная хрустящая корочка' },
+                { name: 'Манная крупа', tip: 'Отлично впитывает влагу и хрустит' }
+            ],
+            'мука': [
+                { name: 'Овсяная или рисовая мука', tip: 'Более рассыпчатая текстура' },
+                { name: 'Манная крупа', tip: 'Подойдёт для запеканок и сырников' }
+            ],
+            'яйцо': [
+                { name: 'Спелый банан (0.5 шт)', tip: 'Отличная связка для сладкой выпечки' },
+                { name: '1 ст.л. крахмала + 2 ст.л. воды', tip: 'Свяжет фарш или овощную массу' }
+            ],
+            'сахар': [
+                { name: 'Мёд или сироп топинамбура', tip: 'Добавляй чуть меньше, чтобы не подгорело сверху' },
+                { name: 'Подсластитель (эритрит / стевия)', tip: 'Без лишних калорий' }
+            ],
+            'чеснок': [
+                { name: 'Сушёный гранулированный чеснок', tip: 'В аэрогриле не горит в отличие от свежего!' },
+                { name: 'Луковый порошок или паприка', tip: 'Для мягкого аромата' }
+            ],
+            'творог': [
+                { name: 'Рикотта или мягкий сыр', tip: 'Получится кремовая нежная текстура' },
+                { name: 'Адыгейский сыр (натёртый)', tip: 'Для несладких запеканок' }
+            ],
+            'яблоки': [
+                { name: 'Груши (твёрдые или средние)', tip: 'Запекаются точно так же, как яблоки' },
+                { name: 'Бананы или замороженные ягоды', tip: 'Если ягоды — добавь 1 ч.л. крахмала' }
+            ],
+            'сыр': [
+                { name: 'Моцарелла для пиццы', tip: 'Тянется лучше всего и не пересыхает' },
+                { name: 'Сулугуни или брынза', tip: 'Яркий солоноватый вкус' }
+            ]
+        };
+
+        const RECIPES = [
+            // --- ШАРЛОТКИ (3 ВАРИАНТА) ---
             {
-                id: 'offline-1',
-                emoji: '🍯',
-                title: 'Медово-соевое куриное филе',
-                description: 'Сочная куриная грудка в глянцевой карамельной глазури за 14 минут без пересушивания.',
-                temperature: '190°C',
-                time: '14 мин',
-                difficulty: 'Легко',
-                moods: ['fast', 'hearty', 'light'],
-                keywords: ['курица', 'филе', 'грудка', 'мед', 'соевый', 'пп', 'белок'],
+                id: 'charlotte-classic',
+                title: 'Классическая яблочная шарлотка',
+                emoji: '🥧',
+                moods: ['baking'],
+                temp: 165,
+                time: 28,
+                baseServings: 4,
+                calories: '215 ккал',
+                keywords: ['шарлотка', 'яблочный пирог', 'выпечка', 'яблоки', 'к чаю', 'десерт', 'бисквит'],
                 ingredients: [
-                    'Куриное филе — 400 г',
-                    'Соевый соус — 2 ст. л.',
-                    'Жидкий мёд — 1 ст. л.',
-                    'Чеснок сушёный — 1 ч. л.',
-                    'Копчёная паприка — 0.5 ч. л.',
-                    'Растительное масло (спрей) — 1 ч. л.'
+                    { name: 'Яблоки (кисло-сладкие)', amount: 250, unit: 'г', category: 'яблоки' },
+                    { name: 'Яйца куриные', amount: 3, unit: 'шт', category: 'яйцо' },
+                    { name: 'Сахар', amount: 110, unit: 'г', category: 'сахар' },
+                    { name: 'Мука пшеничная', amount: 110, unit: 'г', category: 'мука' },
+                    { name: 'Разрыхлитель', amount: 0.5, unit: 'ч.л.' },
+                    { name: 'Корица молотая', amount: 0.5, unit: 'ч.л.' },
+                    { name: 'Сливочное масло (для формы)', amount: 10, unit: 'г', category: 'масло' }
                 ],
                 steps: [
-                    'Нарежьте куриное филе крупными медальонами толщиной около 2.5 см и обсушите бумажным полотенцем.',
-                    'Смешайте соевый соус, мёд, сухой чеснок и паприку. Обваляйте филе в маринаде на 5 минут.',
-                    'Разогрейте аэрогриль до 190°C в течение 3 минут, слегка сбрызните решётку маслом.',
-                    'Выложите кусочки в один слой с зазором между ними. Готовьте 7 минут.',
-                    'Переверните филе, смажьте остатками соуса и запекайте ещё 6–7 минут до румяной корочки.'
-                ],
-                tip: 'Не выкладывайте филе вплотную друг к другу — горячему воздуху нужна циркуляция, иначе мясо начнёт тушиться, а не жариться.'
+                    'Нарежь яблоки тонкими дольками, сбрызни лимонным соком и присыпь корицей.',
+                    'Взбей яйца с сахаром миксером или венчиком 3–4 минуты до светлой пышной пены.',
+                    'Аккуратно вмешай просеянную муку с разрыхлителем лопаточкой снизу вверх.',
+                    'Смажь силиконовую или металлическую форму (подходящую под чашу аэрогриля) маслом, выложи яблоки и залей тестом.',
+                    'Выпекай при 165°C около 25–28 минут. Через 15 минут проверь верх: если сильно румянится, прикрой фольгой.'
+                ]
             },
             {
-                id: 'offline-2',
-                emoji: '🥔',
-                title: 'Картошка по-деревенски с чесноком',
-                description: 'Хрустящие золотистые дольки снаружи и нежное пюре внутри с ароматом трав и чеснока.',
-                temperature: '200°C',
-                time: '18 мин',
-                difficulty: 'Легко',
-                moods: ['snacks', 'beer', 'lazy'],
-                keywords: ['картошка', 'картофель', 'дольки', 'гарнир', 'чеснок', 'фри'],
+                id: 'charlotte-curd',
+                title: 'Творожно-яблочная шарлотка (влажная и нежная)',
+                emoji: '🍏',
+                moods: ['baking', 'light'],
+                temp: 160,
+                time: 30,
+                baseServings: 4,
+                calories: '185 ккал',
+                keywords: ['шарлотка', 'творожная шарлотка', 'яблоки', 'творог', 'пирог', 'выпечка', 'пп'],
                 ingredients: [
-                    'Картофель молодой — 500 г',
-                    'Оливковое или подсолнечное масло — 1.5 ст. л.',
-                    'Сладкая паприка — 1 ч. л.',
-                    'Чеснок гранулированный — 1 ч. л.',
-                    'Соль и чёрный перец — по вкусу',
-                    'Сушёный укроп или розмарин — 0.5 ч. л.'
+                    { name: 'Творог 5%', amount: 200, unit: 'г', category: 'творог' },
+                    { name: 'Яблоки', amount: 200, unit: 'г', category: 'яблоки' },
+                    { name: 'Яйца куриные', amount: 2, unit: 'шт', category: 'яйцо' },
+                    { name: 'Мука (или рисовая)', amount: 80, unit: 'г', category: 'мука' },
+                    { name: 'Сахар или мёд', amount: 70, unit: 'г', category: 'сахар' },
+                    { name: 'Разрыхлитель', amount: 1, unit: 'ч.л.' }
                 ],
                 steps: [
-                    'Тщательно вымойте картофель и нарежьте крупными дольками. Обсушите полотенцем — это главный секрет хруста.',
-                    'В миске смешайте дольки с маслом, паприкой, солью и перцем (чеснок добавим в конце, чтобы не сгорел).',
-                    'Загрузите картофель в корзину аэрогриля при 200°C на 10 минут.',
-                    'Достаньте корзину, энергично встряхните её, посыпьте сушёным чесноком и травами.',
-                    'Готовьте ещё 7–8 минут при 200°C до уверенного золотистого хруста.'
-                ],
-                tip: 'Если замочить нарезанный картофель в холодной воде на 15 минут, а затем насухо вытереть, выйдет лишний крахмал и корочка станет вдвое хрустящей.'
+                    'Разомни творог вилкой или пробей блендером с яйцами и сахаром до однородности.',
+                    'Добавь муку и разрыхлитель, перемешай густое тесто.',
+                    'Яблоки нарежь кубиками и вмешай прямо в тесто.',
+                    'Переложи массу в форму для аэрогриля и готовь при 160°C 30 минут до сухой зубочистки.'
+                ]
             },
             {
-                id: 'offline-3',
-                emoji: '🍗',
-                title: 'Хрустящие крылышки Баффало',
-                description: 'Легендарная закуска с огненно-пряной глазурью и хрустящей кожицей без капли фритюра.',
-                temperature: '200°C',
-                time: '22 мин',
-                difficulty: 'Средне',
-                moods: ['beer', 'spicy', 'hearty'],
-                keywords: ['крылышки', 'курица', 'острое', 'пиво', 'баффало', 'снек'],
+                id: 'charlotte-pear',
+                title: 'Шарлотка с грушей, корицей и грецким орехом',
+                emoji: '🍐',
+                moods: ['baking'],
+                temp: 165,
+                time: 26,
+                baseServings: 4,
+                calories: '230 ккал',
+                keywords: ['шарлотка', 'груша', 'пирог', 'выпечка', 'орехи', 'десерт'],
                 ingredients: [
-                    'Куриные крылья (фаланги) — 700 г',
-                    'Разрыхлитель теста — 1 ч. л. (для суперхруста)',
-                    'Соль — 0.5 ч. л.',
-                    'Острый соус чили или Шрирача — 3 ст. л.',
-                    'Сливочное масло — 30 г',
-                    'Яблочный уксус или лимонный сок — 1 ч. л.'
+                    { name: 'Груши плотные', amount: 250, unit: 'г', category: 'яблоки' },
+                    { name: 'Яйца', amount: 3, unit: 'шт', category: 'яйцо' },
+                    { name: 'Сахар', amount: 100, unit: 'г', category: 'сахар' },
+                    { name: 'Мука', amount: 110, unit: 'г', category: 'мука' },
+                    { name: 'Грецкие орехи', amount: 30, unit: 'г' },
+                    { name: 'Корица', amount: 0.5, unit: 'ч.л.' }
                 ],
                 steps: [
-                    'Промокните крылышки салфетками досуха. Смешайте разрыхлитель с солью и обваляйте в них крылья.',
-                    'Выложите крылья в корзину аэрогриля в один слой и готовьте 12 минут при 200°C.',
-                    'Переверните крылышки и запекайте ещё 8–10 минут до тёмно-золотистой хрустящей корочки.',
-                    'Растопите сливочное масло и смешайте с острым соусом и каплей лимонного сока.',
-                    'Переложите горячие крылья в миску с соусом, быстро перемешайте и сразу подавайте.'
-                ],
-                tip: 'Щепотка разрыхлителя меняет pH кожицы курицы, благодаря чему в аэрогриле появляются те самые пузырьки хруста, как из глубокого фритюра.'
+                    'Нарежь груши ломтиками, орехи слегка поруби ножом.',
+                    'Взбей яйца с сахаром до пышности, аккуратно введи муку.',
+                    'Выложи в форму груши, посыпь корицей и орехами, залей бисквитным тестом.',
+                    'Готовь в аэрогриле при 165°C 26 минут, дай остыть 10 минут перед нарезкой.'
+                ]
             },
+
+            // --- ЗАПЕКАНКИ (4 ВАРИАНТА) ---
             {
-                id: 'offline-4',
-                emoji: '🐟',
-                title: 'Стейк лосося с лимоном и травами',
-                description: 'Нежнейшая красная рыба с румяной корочкой всего за 11 минут. Минимум усилий, ресторанный вкус.',
-                temperature: '185°C',
-                time: '11 мин',
-                difficulty: 'Легко',
-                moods: ['fast', 'light', 'hearty'],
-                keywords: ['рыба', 'лосось', 'семга', 'форель', 'стейк', 'пп', 'ужин'],
+                id: 'casserole-curd',
+                title: 'Воздушная творожная запеканка как в детстве',
+                emoji: '🍮',
+                moods: ['baking', 'breakfast', 'light'],
+                temp: 160,
+                time: 25,
+                baseServings: 3,
+                calories: '175 ккал',
+                keywords: ['запеканка', 'творожная запеканка', 'творог', 'завтрак', 'десерт', 'пп'],
                 ingredients: [
-                    'Стейк или филе лосося — 2 шт. (по 180 г)',
-                    'Оливковое масло — 1 ч. л.',
-                    'Лимон — 2 дольки',
-                    'Прованские травы — 0.5 ч. л.',
-                    'Соль и свежемолотый перец — по вкусу'
+                    { name: 'Творог брикетный 5–9%', amount: 400, unit: 'г', category: 'творог' },
+                    { name: 'Яйца', amount: 2, unit: 'шт', category: 'яйцо' },
+                    { name: 'Сметана', amount: 60, unit: 'г', category: 'сметана' },
+                    { name: 'Манная крупа', amount: 40, unit: 'г', category: 'мука' },
+                    { name: 'Сахар', amount: 50, unit: 'г', category: 'сахар' },
+                    { name: 'Ванильный сахар', amount: 1, unit: 'ч.л.' }
                 ],
                 steps: [
-                    'Смажьте рыбу оливковым маслом, посолите, поперчите и посыпьте прованскими травами.',
-                    'Застелите дно корзины перфорированным пергаментом или слегка смажьте решётку.',
-                    'Выложите лосось кожей вниз, сверху положите по тонкому кружочку лимона.',
-                    'Готовьте при 185°C ровно 10–12 минут в зависимости от толщины куска.',
-                    'Дайте рыбе отдохнуть 2 минуты перед подачей — внутри она останется розовой и сочной.'
-                ],
-                tip: 'Не переворачивайте рыбу в процессе: циркуляция горячего воздуха снизу через решётку пропекает кожу до хруста сама.'
+                    'Смешай творог, желтки, сметану, манку и сахар (можно пробить блендером для кремовой текстуры). Дай постоять 10 минут, чтобы манка набухла.',
+                    'Взбей белки со щепоткой соли до мягких пиков и аккуратно вмешай в творожную массу.',
+                    'Переложи в силиконовую форму для аэрогриля.',
+                    'Выпекай при 160°C 25 минут, затем оставь в выключенном аэрогриле ещё на 10 минут, чтобы запеканка не осела.'
+                ]
             },
             {
-                id: 'offline-5',
-                emoji: '🍖',
-                title: 'Свиные рёбрышки в соусе BBQ',
-                description: 'Мягкое мясо, которое само отходит от кости, под липкой дымной корочкой барбекю.',
-                temperature: '180°C',
-                time: '25 мин',
-                difficulty: 'Средне',
-                moods: ['hearty', 'beer'],
-                keywords: ['свинина', 'ребра', 'ребрышки', 'мясо', 'барбекю', 'bbq'],
+                id: 'casserole-potato-meat',
+                title: 'Картофельная запеканка с фаршем и сырной шапкой',
+                emoji: '🥘',
+                moods: ['dinner'],
+                temp: 180,
+                time: 28,
+                baseServings: 4,
+                calories: '260 ккал',
+                keywords: ['запеканка', 'картофельная запеканка', 'картошка', 'фарш', 'мясо', 'ужин', 'сыр'],
                 ingredients: [
-                    'Свиные рёбра (лента) — 600 г',
-                    'Соус Барбекю (BBQ) — 4 ст. л.',
-                    'Копчёная паприка — 1.5 ч. л.',
-                    'Сушёный чеснок — 1 ч. л.',
-                    'Соль — 1 ч. л.',
-                    'Чёрный перец — 0.5 ч. л.'
+                    { name: 'Картофель', amount: 500, unit: 'г' },
+                    { name: 'Фарш (куриный или говяжий)', amount: 350, unit: 'г' },
+                    { name: 'Сыр твёрдый', amount: 90, unit: 'г', category: 'сыр' },
+                    { name: 'Сметана или майонез', amount: 50, unit: 'г', category: 'сметана' },
+                    { name: 'Лук репчатый', amount: 1, unit: 'шт' },
+                    { name: 'Соль, перец, паприка', amount: 1, unit: 'ч.л.' }
                 ],
                 steps: [
-                    'Снимите плёнку с внутренней стороны рёбер и нарежьте ленту на порции по 2–3 ребра.',
-                    'Натрите мясо смесью соли, перца, чеснока и копчёной паприки.',
-                    'Выложите рёбра в корзину и запекайте 18 минут при 180°C, перевернув на половине времени.',
-                    'Обильно смажьте рёбра соусом BBQ со всех сторон.',
-                    'Верните в аэрогриль ещё на 5–7 минут при 190°C для карамелизации соуса.'
-                ],
-                tip: 'Если налить на самое дно чаши (под решётку) 2 столовые ложки воды, капающий жир не будет дымить.'
+                    'Картофель нарежь очень тонкими кружочками (2–3 мм), посоли и смешай со сметаной и специями.',
+                    'Фарш посоли, поперчи и смешай с мелко рубленным луком.',
+                    'В форму выложи половину картофеля, затем слой фарша, сверху закрой оставшимся картофелем.',
+                    'Накрой форму фольгой и готовь 20 минут при 180°C. Затем сними фольгу, посыпь тёртым сыром и запекай ещё 8 минут до румяной корочки.'
+                ]
             },
             {
-                id: 'offline-6',
+                id: 'casserole-zucchini',
+                title: 'Лёгкая запеканка из кабачков с сыром и зеленью',
+                emoji: '🥒',
+                moods: ['light', 'dinner'],
+                temp: 175,
+                time: 22,
+                baseServings: 3,
+                calories: '135 ккал',
+                keywords: ['запеканка', 'кабачки', 'кабачковая запеканка', 'овощи', 'пп', 'сыр'],
+                ingredients: [
+                    { name: 'Кабачки молодые', amount: 450, unit: 'г' },
+                    { name: 'Яйца', amount: 2, unit: 'шт', category: 'яйцо' },
+                    { name: 'Сыр твёрдый', amount: 80, unit: 'г', category: 'сыр' },
+                    { name: 'Мука', amount: 50, unit: 'г', category: 'мука' },
+                    { name: 'Сметана', amount: 40, unit: 'г', category: 'сметана' },
+                    { name: 'Чеснок и укроп', amount: 15, unit: 'г', category: 'чеснок' }
+                ],
+                steps: [
+                    'Натри кабачки на крупной тёрке, посоли, подожди 5 минут и хорошо отожми лишний сок.',
+                    'Смешай кабачки с яйцами, сметаной, мукой, зеленью и половиной тёртого сыра.',
+                    'Выложи в форму, посыпь оставшимся сыром сверху.',
+                    'Запекай в аэрогриле при 175°C 20–22 минуты до золотистой корочки.'
+                ]
+            },
+            {
+                id: 'casserole-chicken-broccoli',
+                title: 'Куриная запеканка с брокколи в сливочной заливке',
                 emoji: '🥦',
-                title: 'Хрустящая цветная капуста в панировке',
-                description: 'Неожиданно вкусная альтернатива наггетсам: пряные соцветия с румяной корочкой.',
-                temperature: '195°C',
-                time: '14 мин',
-                difficulty: 'Легко',
-                moods: ['light', 'snacks', 'fast'],
-                keywords: ['овощи', 'капуста', 'цветная', 'пп', 'веган', 'закуска'],
+                moods: ['dinner', 'light'],
+                temp: 180,
+                time: 22,
+                baseServings: 3,
+                calories: '165 ккал',
+                keywords: ['запеканка', 'курица', 'брокколи', 'филе', 'ужин', 'пп', 'сыр'],
                 ingredients: [
-                    'Цветная капуста — 350 г',
-                    'Панировочные сухари Панко — 40 г',
-                    'Оливковое масло — 1.5 ст. л.',
-                    'Тёртый пармезан — 25 г',
-                    'Куркума или паприка — 0.5 ч. л.',
-                    'Соль — по вкусу'
+                    { name: 'Куриное филе', amount: 350, unit: 'г' },
+                    { name: 'Брокколи (свежая или заморож.)', amount: 250, unit: 'г' },
+                    { name: 'Яйца', amount: 2, unit: 'шт', category: 'яйцо' },
+                    { name: 'Сметана 15%', amount: 80, unit: 'г', category: 'сметана' },
+                    { name: 'Сыр', amount: 70, unit: 'г', category: 'сыр' },
+                    { name: 'Соль, чеснок сушёный', amount: 1, unit: 'ч.л.', category: 'чеснок' }
                 ],
                 steps: [
-                    'Разберите цветную капусту на небольшие одинаковые соцветия.',
-                    'Сбрызните соцветия оливковым маслом, посолите и добавьте специи.',
-                    'Смешайте сухари Панко с тёртым пармезаном и тщательно обваляйте капусту.',
-                    'Выложите в корзину аэрогриля в один слой и готовьте 13–14 минут при 195°C.',
-                    'Встряхните корзину на 7-й минуте для равномерной прожарки.'
-                ],
-                tip: 'Подавайте с соусом из греческого йогурта, чеснока и мелко рубленого укропа — улетает за минуту.'
+                    'Нарежь куриное филе небольшими кубиками, разбери брокколи на мелкие соцветия.',
+                    'Взбей вилкой яйца со сметаной, солью и сушёным чесноком.',
+                    'Сложи курицу и брокколи в форму, залей яичной смесью и присыпь сыром.',
+                    'Готовь при 180°C 20–22 минуты до румяного верха.'
+                ]
             },
+
+            // --- ХРУСТ / ПОД КИНО / БЫСТРО ---
             {
-                id: 'offline-7',
-                emoji: '🌯',
-                title: 'Хрустящие конвертики из лаваша с сыром',
-                description: 'Идеальный ленивый завтрак или быстрый перекус с тянущимся сыром и ветчиной за 8 минут.',
-                temperature: '185°C',
-                time: '8 мин',
-                difficulty: 'Лениво',
-                moods: ['fast', 'lazy', 'snacks'],
-                keywords: ['лаваш', 'сыр', 'ветчина', 'завтрак', 'перекус', 'быстро', 'лениво'],
+                id: 'wings-buffalo',
+                title: 'Хрустящие куриные крылышки с паприкой и чесноком',
+                emoji: '🍗',
+                moods: ['crispy', 'dinner'],
+                temp: 200,
+                time: 20,
+                baseServings: 2,
+                calories: '290 ккал',
+                keywords: ['крылья', 'крылышки', 'курица', 'под пиво', 'хрустящие', 'баффало'],
                 ingredients: [
-                    'Тонкий армянский лаваш — 1 лист',
-                    'Сыр сулугуни или моцарелла — 120 г',
-                    'Ветчина или варёно-копчёная индейка — 100 г',
-                    'Помидор (по желанию) — 0.5 шт.',
-                    'Сливочное масло или яйцо для смазки — 10 г'
+                    { name: 'Куриные крылья', amount: 600, unit: 'г' },
+                    { name: 'Масло растительное', amount: 15, unit: 'мл', category: 'масло' },
+                    { name: 'Копчёная паприка', amount: 1, unit: 'ч.л.' },
+                    { name: 'Сушёный чеснок', amount: 1, unit: 'ч.л.', category: 'чеснок' },
+                    { name: 'Разрыхлитель (секрет хруста!)', amount: 0.5, unit: 'ч.л.' },
+                    { name: 'Соль и чёрный перец', amount: 1, unit: 'ч.л.' }
                 ],
                 steps: [
-                    'Нарежьте лаваш на 3–4 широкие полоски. Сыр натрите на крупной тёрке, ветчину нарежьте кубиком.',
-                    'Выложите начинку на край полоски и сверните плотным треугольником или конвертиком.',
-                    'Слегка смажьте верх конвертиков растопленным маслом или взбитым яйцом для глянца.',
-                    'Поместите в аэрогриль швом вниз на 7–8 минут при 185°C до румяного хруста.'
-                ],
-                tip: 'Шов обязательно кладите вниз, иначе мощный поток воздуха в аэрогриле может развернуть конвертик.'
+                    'Обсуши крылья бумажным полотенцем — это главный секрет хрустящей кожицы.',
+                    'Смешай соль, паприку, сушёный чеснок и разрыхлитель, обваляй крылья и сбрызни маслом.',
+                    'Выложи в корзину в один слой. Готовь при 200°C 20 минут, встряхнув корзину на 10-й минуте.'
+                ]
             },
             {
-                id: 'offline-8',
+                id: 'fries-country',
+                title: 'Картофель по-деревенски с чесноком и травами',
+                emoji: '🍟',
+                moods: ['crispy', 'dinner'],
+                temp: 195,
+                time: 18,
+                baseServings: 2,
+                calories: '190 ккал',
+                keywords: ['картошка', 'картофель', 'по деревенски', 'фри', 'гарнир', 'под пиво'],
+                ingredients: [
+                    { name: 'Картофель', amount: 500, unit: 'г' },
+                    { name: 'Масло растительное', amount: 20, unit: 'мл', category: 'масло' },
+                    { name: 'Паприка сладкая', amount: 1, unit: 'ч.л.' },
+                    { name: 'Сушёный чеснок', amount: 1, unit: 'ч.л.', category: 'чеснок' },
+                    { name: 'Прованские травы', amount: 0.5, unit: 'ч.л.' },
+                    { name: 'Соль', amount: 0.5, unit: 'ч.л.' }
+                ],
+                steps: [
+                    'Нарежь картофель дольками, промой в холодной воде от крахмала и насухо вытри полотенцем.',
+                    'Смешай дольки с маслом, паприкой, чесноком, травами и солью.',
+                    'Запекай при 195°C 18 минут. Обязательно встряхни корзину в середине готовки!'
+                ]
+            },
+            {
+                id: 'pelmeni-fried',
+                title: 'Хрустящие жареные пельмени за 12 минут',
+                emoji: '🥟',
+                moods: ['quick', 'crispy'],
+                temp: 190,
+                time: 12,
+                baseServings: 2,
+                calories: '310 ккал',
+                keywords: ['пельмени', 'жареные пельмени', 'быстро', 'закуска', 'под пиво'],
+                ingredients: [
+                    { name: 'Пельмени замороженные', amount: 400, unit: 'г' },
+                    { name: 'Масло растительное', amount: 15, unit: 'мл', category: 'масло' },
+                    { name: 'Паприка или специи для мяса', amount: 0.5, unit: 'ч.л.' },
+                    { name: 'Сметана (для подачи)', amount: 50, unit: 'г', category: 'сметана' }
+                ],
+                steps: [
+                    'Не размораживай пельмени! Прямо из морозилки переложи в миску, добавь масло и специи, хорошо перемешай.',
+                    'Высыпь пельмени в корзину аэрогриля в один слой.',
+                    'Готовь при 190°C 12 минут, встряхнув корзину на 6-й минуте. Подавай со сметаной или чесночным соусом.'
+                ]
+            },
+            {
+                id: 'nuggets-crispy',
+                title: 'Домашние куриные наггетсы без жарки в масле',
                 emoji: '🍤',
-                title: 'Чесночные креветки в пряном масле',
-                description: 'Сочные тигровые креветки с ароматом чеснока и лимона — готовятся быстрее, чем закипает чайник.',
-                temperature: '190°C',
-                time: '8 мин',
-                difficulty: 'Легко',
-                moods: ['fast', 'beer', 'light'],
-                keywords: ['креветки', 'морепродукты', 'чеснок', 'пиво', 'быстро', 'закуска'],
+                moods: ['quick', 'crispy', 'dinner'],
+                temp: 200,
+                time: 13,
+                baseServings: 2,
+                calories: '210 ккал',
+                keywords: ['наггетсы', 'курица', 'филе', 'стрипсы', 'хрустящие', 'быстро'],
                 ingredients: [
-                    'Тигровые или королевские креветки (очищенные) — 300 г',
-                    'Оливковое или растопленное сливочное масло — 1.5 ст. л.',
-                    'Чеснок свежий — 2 зубчика',
-                    'Хлопья чили — щепотка',
-                    'Соль и сок четвертинки лимона'
+                    { name: 'Куриное филе', amount: 400, unit: 'г' },
+                    { name: 'Панировочные сухари', amount: 80, unit: 'г', category: 'панировочные сухари' },
+                    { name: 'Яйцо куриное', amount: 1, unit: 'шт', category: 'яйцо' },
+                    { name: 'Масло растительное', amount: 10, unit: 'мл', category: 'масло' },
+                    { name: 'Соль, паприка, чеснок', amount: 1, unit: 'ч.л.', category: 'чеснок' }
                 ],
                 steps: [
-                    'Разморозьте креветки, удалите кишечную вену и тщательно промокните салфеткой.',
-                    'Смешайте масло, пропущенный через пресс чеснок, соль и хлопья чили.',
-                    'Перемешайте креветки с ароматным маслом.',
-                    'Выложите в корзину аэрогриля в один слой и готовьте при 190°C ровно 7–8 минут, встряхнув на 4-й минуте.',
-                    'Перед подачей сбрызните свежим лимонным соком.'
-                ],
-                tip: 'Не передерживайте креветки дольше 8–9 минут, иначе белок свернётся слишком сильно и они станут резиновыми.'
+                    'Нарежь куриное филе кусочками на один укус, посоли и посыпь специями.',
+                    'В одной миске взбей яйцо, в другую насыпь сухари и смешай их с чайной ложкой масла (так панировка станет золотистой).',
+                    'Обмакни каждый кусочек в яйцо, затем в сухари и выложи в корзину.',
+                    'Готовь при 200°C 12–13 минут, перевернув на половине времени.'
+                ]
             },
             {
-                id: 'offline-9',
-                emoji: '🍎',
-                title: 'Печёные яблоки с корицей и орехами',
-                description: 'Ароматный тёплый десерт с карамельной начинкой без лишнего сахара за 12 минут.',
-                temperature: '180°C',
-                time: '12 мин',
-                difficulty: 'Легко',
-                moods: ['fast', 'snacks', 'light'],
-                keywords: ['десерт', 'сладкое', 'яблоки', 'корица', 'орехи', 'чай'],
+                id: 'shrimp-garlic',
+                title: 'Королевские креветки в чесночно-лимонном маринаде',
+                emoji: '🦐',
+                moods: ['quick', 'crispy', 'light'],
+                temp: 190,
+                time: 8,
+                baseServings: 2,
+                calories: '145 ккал',
+                keywords: ['креветки', 'морепродукты', 'чеснок', 'быстро', 'под пиво', 'пп'],
                 ingredients: [
-                    'Крупные плотные яблоки — 2 шт.',
-                    'Грецкие орехи — 30 г',
-                    'Мёд или кленовый сироп — 2 ч. л.',
-                    'Молотая корица — 0.5 ч. л.',
-                    'Сливочное масло — 10 г'
+                    { name: 'Креветки крупные (очищенные)', amount: 400, unit: 'г' },
+                    { name: 'Масло оливковое или сливочное', amount: 15, unit: 'мл', category: 'масло' },
+                    { name: 'Чеснок', amount: 2, unit: 'зубч.', category: 'чеснок' },
+                    { name: 'Сок лимона', amount: 1, unit: 'ст.л.' },
+                    { name: 'Соль и паприка', amount: 0.5, unit: 'ч.л.' }
                 ],
                 steps: [
-                    'Срежьте верхушку у яблок и аккуратно вырежьте сердцевину ложкой, не протыкая дно.',
-                    'Измельчите орехи, смешайте с мёдом, корицей и маленькими кусочками сливочного масла.',
-                    'Плотно нафаршируйте яблоки начинкой.',
-                    'Поставьте яблоки в форму из фольги или прямо на решётку и запекайте 12 минут при 180°C.'
-                ],
-                tip: 'Сделайте несколько проколов зубочисткой на кожице яблок сверху — тогда кожура не лопнет от пара.'
+                    'Если креветки замороженные — заранее разморозь и обсуши салфеткой.',
+                    'Смешай креветки с маслом, измельчённым чесноком, лимонным соком и паприкой.',
+                    'Выложи в один слой и готовь при 190°C всего 7–8 минут, встряхнув на 4-й минуте.'
+                ]
             },
             {
-                id: 'offline-10',
-                emoji: '🌽',
-                title: 'Куриные стрипсы в кукурузных хлопьях',
-                description: 'Суперхрустящие стрипсы как из любимого фастфуда, но без литра кипящего масла.',
-                temperature: '195°C',
-                time: '13 мин',
-                difficulty: 'Средне',
-                moods: ['beer', 'snacks', 'fast', 'hearty'],
-                keywords: ['стрипсы', 'курица', 'наггетсы', 'хлопья', 'хруст', 'пиво'],
-                ingredients: [
-                    'Куриное филе — 400 г',
-                    'Несладкие кукурузные хлопья — 80 г',
-                    'Яйцо куриное — 1 шт.',
-                    'Мука — 2 ст. л.',
-                    'Паприка, соль, сухой чеснок — по 0.5 ч. л.',
-                    'Масло-спрей — для сбрызгивания'
-                ],
-                steps: [
-                    'Нарежьте куриное филе длинными полосками, посолите и посыпьте специями.',
-                    'Измельчите кукурузные хлопья скалкой или руками в крупную крошку.',
-                    'Обваляйте каждый кусочек в муке, затем окуните во взбитое яйцо и плотно обваляйте в хлопьях.',
-                    'Выложите в аэрогриль, сбрызните маслом сверху и готовьте 12–13 минут при 195°C.'
-                ],
-                tip: 'Обязательно используйте хлопья без глазури и сахара, а лёгкое сбрызгивание маслом активирует золотистый цвет.'
-            },
-            {
-                id: 'offline-11',
-                emoji: '🍄',
-                title: 'Шампиньоны с моцареллой и чесноком',
-                description: 'Сочные запечённые шляпки с тянущейся сырной шапочкой — идеальная горячая закуска.',
-                temperature: '185°C',
-                time: '12 мин',
-                difficulty: 'Легко',
-                moods: ['fast', 'snacks', 'light'],
-                keywords: ['грибы', 'шампиньоны', 'сыр', 'закуска', 'вегетарианское'],
-                ingredients: [
-                    'Крупные шампиньоны — 8–10 шт.',
-                    'Сыр моцарелла или гауда — 90 г',
-                    'Сметана или творожный сыр — 1.5 ст. л.',
-                    'Чеснок — 1 зубчик',
-                    'Соль, перец, свежая петрушка'
-                ],
-                steps: [
-                    'Удалите ножки у шампиньонов, мелко их порубите и смешайте с тёртым сыром, сметаной и чесноком.',
-                    'Слегка посолите шляпки изнутри и плотно наполните сырной массой с горкой.',
-                    'Выложите в корзину аэрогриля и готовьте при 185°C 11–12 минут до румяной сырной корочки.',
-                    'Перед подачей посыпьте свежей зеленью.'
-                ],
-                tip: 'Не мойте шампиньоны под струёй воды перед запеканием — просто протрите влажной салфеткой, чтобы они не пустили лишнюю воду.'
-            },
-            {
-                id: 'offline-12',
-                emoji: '🌶️',
-                title: 'Острые куриные голени в глазури Шрирача',
-                description: 'Румяные ножки с огненно-сладкой корочкой, от которых невозможно оторваться.',
-                temperature: '195°C',
-                time: '20 мин',
-                difficulty: 'Легко',
-                moods: ['spicy', 'hearty', 'beer'],
-                keywords: ['голени', 'ножки', 'курица', 'острое', 'шрирача', 'мясо'],
-                ingredients: [
-                    'Куриные голени — 6 шт.',
-                    'Соус Шрирача — 2 ст. л.',
-                    'Соевый соус — 1.5 ст. л.',
-                    'Мёд или коричневый сахар — 1 ст. л.',
-                    'Растительное масло — 1 ст. л.',
-                    'Соль и чесночный порошок — по вкусу'
-                ],
-                steps: [
-                    'Сделайте пару неглубоких надрезов на мясистой части голеней, натрите маслом, солью и чесноком.',
-                    'Запекайте в аэрогриле 15 минут при 195°C, перевернув один раз.',
-                    'Смешайте Шрирачу, соевый соус и мёд. Смажьте голени со всех сторон.',
-                    'Верните в аэрогриль ещё на 5 минут при 200°C до карамелизации глазури.'
-                ],
-                tip: 'Регулируйте остроту пропорцией мёда и Шрирачи: 1:1 даст приятную пикантность, 1:3 — настоящий пожар.'
-            },
-            {
-                id: 'offline-13',
-                emoji: '🌭',
-                title: 'Ленивые сосиски в слоёном тесте',
-                description: 'Горячая выпечка из двух ингредиентов, когда готовить совсем лень, а перекусить хочется.',
-                temperature: '190°C',
-                time: '10 мин',
-                difficulty: 'Лениво',
-                moods: ['lazy', 'fast', 'snacks'],
-                keywords: ['сосиски', 'тесто', 'выпечка', 'лениво', 'перекус', 'быстро'],
-                ingredients: [
-                    'Хорошие молочные сосиски — 6 шт.',
-                    'Слоёное бездрожжевое тесто — 1 пласт (250 г)',
-                    'Кунжут (по желанию) — 1 ч. л.',
-                    'Молоко или желток для смазывания — 1 ст. л.'
-                ],
-                steps: [
-                    'Нарежьте размороженное слоёное тесто на 6 длинных полосок.',
-                    'Оберните каждую сосиску полоской теста по спирали.',
-                    'Смажьте сверху молоком или желтком, посыпьте кунжутом.',
-                    'Выложите с небольшим расстоянием друг от друга и выпекайте при 190°C 10–11 минут.'
-                ],
-                tip: 'Тесто в аэрогриле сильно поднимается, поэтому оставляйте между сосисками зазор минимум 1.5 см.'
-            },
-            {
-                id: 'offline-14',
-                emoji: '🥩',
-                title: 'Сочный стейк из свиной шеи',
-                description: 'Мраморная свинина с ароматной корочкой гриль внутри квартиры без дыма на всю кухню.',
-                temperature: '200°C',
-                time: '16 мин',
-                difficulty: 'Легко',
-                moods: ['hearty', 'spicy'],
-                keywords: ['стейк', 'свинина', 'шея', 'мясо', 'гриль', 'ужин'],
-                ingredients: [
-                    'Стейк из свиной шеи (толщиной 2 см) — 2 шт.',
-                    'Растительное масло — 1 ст. л.',
-                    'Смесь перцев и кориандр — 1 ч. л.',
-                    'Копчёная паприка — 1 ч. л.',
-                    'Соль крупная — по вкусу'
-                ],
-                steps: [
-                    'Достаньте мясо из холодильника за 15 минут до жарки и промокните салфеткой.',
-                    'Смажьте стейки маслом и натрите специями (солить лучше прямо перед закладкой).',
-                    'Разогрейте аэрогриль до 200°C. Выложите стейки на решётку.',
-                    'Готовьте 8 минут с одной стороны, переверните и запекайте ещё 7–8 минут.',
-                    'Накройте фольгой на 3 минуты перед нарезкой, чтобы сок распределился.'
-                ],
-                tip: 'Предварительный разогрев аэрогриля на 200°C в течение 3 минут сразу «запечатывает» мясной сок внутри стейка.'
-            },
-            {
-                id: 'offline-15',
-                emoji: '🧀',
-                title: 'Запечённый камамбер с чесноком и розмарином',
-                description: 'Тягучий сливочный сыр с хрустящей корочкой — ресторанная закуска за 10 минут.',
-                temperature: '180°C',
-                time: '10 мин',
-                difficulty: 'Лениво',
-                moods: ['lazy', 'snacks', 'fast'],
-                keywords: ['сыр', 'камамбер', 'бри', 'закуска', 'вино', 'хлеб'],
-                ingredients: [
-                    'Сыр Камамбер или Бри (целая головка) — 125 г',
-                    'Чеснок — 1 зубчик',
-                    'Свежий или сушёный розмарин — щепотка',
-                    'Оливковое масло — 1 ч. л.',
-                    'Багет или чиабатта для подачи — 4 ломтика'
-                ],
-                steps: [
-                    'Сделайте на верхней корочке сыра неглубокую сеточку ножом.',
-                    'Вставьте в разрезы тонкие лепестки чеснока, посыпьте розмарином и сбрызните маслом.',
-                    'Переложите сыр на кусочек пергамента с бортиками и поставьте в корзину аэрогриля.',
-                    'Запекайте при 180°C 9–10 минут (рядом на последние 3 минуты можно положить ломтики багета).'
-                ],
-                tip: 'Обязательно используйте пергамент с поднятыми краями, чтобы расплавленный сыр не вытек через решётку.'
-            },
-            {
-                id: 'offline-16',
+                id: 'lavash-chips',
+                title: 'Хрустящие чипсы из лаваша с сыром за 6 минут',
                 emoji: '🌮',
-                title: 'Хрустящие чипсы из лаваша с пармезаном',
-                description: 'Домашние начос за 6 минут без вредных добавок — идеально к сериалу и соусам.',
-                temperature: '180°C',
-                time: '6 мин',
-                difficulty: 'Лениво',
-                moods: ['beer', 'snacks', 'lazy', 'fast'],
-                keywords: ['чипсы', 'снеки', 'пиво', 'лаваш', 'начос', 'быстро'],
+                moods: ['quick', 'crispy'],
+                temp: 180,
+                time: 6,
+                baseServings: 2,
+                calories: '220 ккал',
+                keywords: ['чипсы', 'лаваш', 'снеки', 'под кино', 'под пиво', 'быстро', 'закуска'],
                 ingredients: [
-                    'Тонкий лаваш или тортилья — 100 г',
-                    'Тёртый пармезан — 30 г',
-                    'Оливковое масло — 1 ст. л.',
-                    'Паприка и сушёный чеснок — по 0.5 ч. л.',
-                    'Соль — щепотка'
+                    { name: 'Тонкий армянский лаваш', amount: 150, unit: 'г' },
+                    { name: 'Масло растительное', amount: 15, unit: 'мл', category: 'масло' },
+                    { name: 'Сыр твёрдый (мелко тёртый)', amount: 40, unit: 'г', category: 'сыр' },
+                    { name: 'Паприка и сушёный чеснок', amount: 1, unit: 'ч.л.', category: 'чеснок' }
                 ],
                 steps: [
-                    'Нарежьте лаваш или тортилью ножницами на небольшие треугольники.',
-                    'Сбрызните маслом, посыпьте специями, солью и тёртым пармезаном.',
-                    'Выложите в корзину аэрогриля и готовьте при 180°C всего 5–6 минут.',
-                    'Встряхните корзину на 3-й минуте и следите в конце, чтобы чипсы не подгорели.'
+                    'Смажь лист лаваша тонким слоем масла, посыпь паприкой, чесноком и мелким сыром.',
+                    'Нарежь ножницами на треугольники и переложи в корзину.',
+                    'Запекай при 180°C 5–6 минут, встряхивая каждые 2 минуты, чтобы чипсы не подгорели.'
+                ]
+            },
+            {
+                id: 'rye-croutons',
+                title: 'Чесночные гренки из бородинского хлеба к пенному',
+                emoji: '🍞',
+                moods: ['quick', 'crispy'],
+                temp: 190,
+                time: 8,
+                baseServings: 2,
+                calories: '250 ккал',
+                keywords: ['гренки', 'сухарики', 'хлеб', 'чесночные', 'под пиво', 'закуска', 'быстро'],
+                ingredients: [
+                    { name: 'Хлеб бородинский или ржаной', amount: 250, unit: 'г' },
+                    { name: 'Масло растительное', amount: 20, unit: 'мл', category: 'масло' },
+                    { name: 'Чеснок (свежий или сушёный)', amount: 2, unit: 'зубч.', category: 'чеснок' },
+                    { name: 'Соль крупная', amount: 0.5, unit: 'ч.л.' },
+                    { name: 'Сыр (по желанию для посыпки)', amount: 40, unit: 'г', category: 'сыр' }
                 ],
-                tip: 'После остывания чипсы становятся ещё более хрустящими — дайте им полежать 2 минуты на тарелке.'
+                steps: [
+                    'Нарежь хлеб брусочками толщиной 1.5 см.',
+                    'Смешай масло с тёртым чесноком и солью, обваляй хлебные брусочки.',
+                    'Готовь при 190°C 8 минут, встряхнув на 4-й минуте. За 2 минуты до конца можно посыпать сыром.'
+                ]
+            },
+
+            // --- СЫТНЫЙ УЖИН / ПП ---
+            {
+                id: 'chicken-breast-juicy',
+                title: 'Сочная куриная грудка в медово-горчичном соусе',
+                emoji: '🥩',
+                moods: ['dinner', 'light'],
+                temp: 185,
+                time: 16,
+                baseServings: 2,
+                calories: '170 ккал',
+                keywords: ['курица', 'грудка', 'филе', 'пп', 'ужин', 'сочная', 'белок'],
+                ingredients: [
+                    { name: 'Куриная грудка (филе)', amount: 450, unit: 'г' },
+                    { name: 'Горчица зернистая или обычная', amount: 1, unit: 'ст.л.' },
+                    { name: 'Мёд', amount: 1, unit: 'ч.л.', category: 'сахар' },
+                    { name: 'Масло оливковое', amount: 10, unit: 'мл', category: 'масло' },
+                    { name: 'Соль, паприка, перец', amount: 1, unit: 'ч.л.' }
+                ],
+                steps: [
+                    'Если филе толстое — слегка отбей его или разрежь вдоль на два пласта, чтобы прожарилось равномерно.',
+                    'Смешай горчицу, мёд, масло, соль и паприку, обмажь курицу и дай полежать 10 минут.',
+                    'Готовь при 185°C 15–16 минут, перевернув на 8-й минуте. После сигнала дай грудке отдохнуть 3 минуты — весь сок останется внутри!'
+                ]
+            },
+            {
+                id: 'salmon-steak',
+                title: 'Стейк из лосося (сёмги) с лимоном и розмарином',
+                emoji: '🐟',
+                moods: ['quick', 'dinner', 'light'],
+                temp: 190,
+                time: 12,
+                baseServings: 2,
+                calories: '240 ккал',
+                keywords: ['лосось', 'сёмга', 'форель', 'рыба', 'стейк', 'ужин', 'пп', 'быстро'],
+                ingredients: [
+                    { name: 'Стейк или филе лосося', amount: 400, unit: 'г' },
+                    { name: 'Масло оливковое', amount: 10, unit: 'мл', category: 'масло' },
+                    { name: 'Лимон', amount: 2, unit: 'дольки' },
+                    { name: 'Соль и белый/чёрный перец', amount: 0.5, unit: 'ч.л.' }
+                ],
+                steps: [
+                    'Обсуши рыбу салфеткой, натри солью, перцем и каплей оливкового масла.',
+                    'Выложи на пергамент кожей вниз, сверху положи дольки лимона.',
+                    'Готовь при 190°C 11–12 минут (переворачивать не нужно). Рыба получится нежной внутри и румяной снаружи.'
+                ]
+            },
+            {
+                id: 'mushrooms-soy',
+                title: 'Сочные шампиньоны гриль в соево-чесночном маринаде',
+                emoji: '🍄',
+                moods: ['quick', 'light', 'crispy'],
+                temp: 190,
+                time: 12,
+                baseServings: 2,
+                calories: '85 ккал',
+                keywords: ['грибы', 'шампиньоны', 'овощи', 'гриль', 'пп', 'закуска', 'быстро'],
+                ingredients: [
+                    { name: 'Шампиньоны свежие', amount: 400, unit: 'г' },
+                    { name: 'Соевый соус', amount: 30, unit: 'мл' },
+                    { name: 'Масло растительное', amount: 15, unit: 'мл', category: 'масло' },
+                    { name: 'Чеснок', amount: 2, unit: 'зубч.', category: 'чеснок' },
+                    { name: 'Паприка', amount: 0.5, unit: 'ч.л.' }
+                ],
+                steps: [
+                    'Крупные шампиньоны разрежь пополам, мелкие оставь целиком.',
+                    'Смешай соевый соус, масло, тёртый чеснок и паприку, залей грибы на 10 минут.',
+                    'Выложи в корзину и запекай при 190°C 12 минут, встряхнув на половине времени.'
+                ]
+            },
+            {
+                id: 'veggies-grill',
+                title: 'Овощи гриль с прованскими травами и бальзамиком',
+                emoji: '🫑',
+                moods: ['quick', 'light'],
+                temp: 195,
+                time: 14,
+                baseServings: 2,
+                calories: '95 ккал',
+                keywords: ['овощи', 'овощи гриль', 'кабачок', 'перец', 'пп', 'гарнир', 'веган'],
+                ingredients: [
+                    { name: 'Кабачок', amount: 200, unit: 'г' },
+                    { name: 'Перец болгарский', amount: 150, unit: 'г' },
+                    { name: 'Помидоры черри', amount: 120, unit: 'г' },
+                    { name: 'Масло оливковое', amount: 15, unit: 'мл', category: 'масло' },
+                    { name: 'Соль, чеснок, травы', amount: 1, unit: 'ч.л.', category: 'чеснок' }
+                ],
+                steps: [
+                    'Нарежь кабачок и сладкий перец крупными кусочками, черри оставь целыми.',
+                    'Сбрызни маслом, добавь соль, сушёный чеснок и травы, перемешай.',
+                    'Готовь при 195°C 13–14 минут, один раз встряхнув корзину.'
+                ]
+            },
+            {
+                id: 'turkey-cutlets',
+                title: 'Румяные котлеты из индейки без капли лишнего жира',
+                emoji: '🧆',
+                moods: ['dinner', 'light'],
+                temp: 185,
+                time: 18,
+                baseServings: 3,
+                calories: '160 ккал',
+                keywords: ['котлеты', 'индейка', 'фарш', 'куриные котлеты', 'ужин', 'пп'],
+                ingredients: [
+                    { name: 'Фарш из индейки или курицы', amount: 500, unit: 'г' },
+                    { name: 'Лук репчатый', amount: 1, unit: 'шт' },
+                    { name: 'Яйцо', amount: 1, unit: 'шт', category: 'яйцо' },
+                    { name: 'Панировочные сухари (или овсянка)', amount: 40, unit: 'г', category: 'панировочные сухари' },
+                    { name: 'Соль и перец', amount: 1, unit: 'ч.л.' }
+                ],
+                steps: [
+                    'Мелко натри лук или пробей в блендере, смешай с фаршем, яйцом, солью и перцем.',
+                    'Сформируй 6 аккуратных котлет, слегка обваляй в сухарях и сбрызни маслом.',
+                    'Выложи на пергамент и готовь при 185°C 18 минут, перевернув на 10-й минуте.'
+                ]
+            },
+
+            // --- ЗАВТРАКИ ---
+            {
+                id: 'syrniki-airfryer',
+                title: 'Румяные сырники как из кофейни без сковороды',
+                emoji: '🥞',
+                moods: ['breakfast', 'baking', 'light'],
+                temp: 180,
+                time: 14,
+                baseServings: 2,
+                calories: '195 ккал',
+                keywords: ['сырники', 'творог', 'завтрак', 'сладкое', 'пп'],
+                ingredients: [
+                    { name: 'Творог сухой 5–9%', amount: 350, unit: 'г', category: 'творог' },
+                    { name: 'Яйцо (или только желток)', amount: 1, unit: 'шт', category: 'яйцо' },
+                    { name: 'Мука (пшеничная или рисовая)', amount: 45, unit: 'г', category: 'мука' },
+                    { name: 'Сахар', amount: 25, unit: 'г', category: 'сахар' },
+                    { name: 'Ванилин и щепотка соли', amount: 1, unit: 'щеп.' }
+                ],
+                steps: [
+                    'Разомни творог с яйцом, сахаром, солью и половиной муки. Если творог влажный — отожми его через марлю.',
+                    'Сформируй шайбочки, обваляй в оставшейся муке и выложи на пергамент в чашу аэрогриля.',
+                    'Готовь при 180°C 14 минут, аккуратно перевернув на 8-й минуте.'
+                ]
+            },
+            {
+                id: 'hot-sandwiches',
+                title: 'Хрустящие горячие тосты с сыром, ветчиной и томатом',
+                emoji: '🥪',
+                moods: ['quick', 'breakfast'],
+                temp: 190,
+                time: 7,
+                baseServings: 2,
+                calories: '275 ккал',
+                keywords: ['бутерброды', 'тосты', 'горячие бутерброды', 'сыр', 'хлеб', 'завтрак', 'быстро'],
+                ingredients: [
+                    { name: 'Хлеб тостовый или батон', amount: 4, unit: 'ломт.' },
+                    { name: 'Сыр полутвёрдый', amount: 80, unit: 'г', category: 'сыр' },
+                    { name: 'Ветчина или запечённая курица', amount: 80, unit: 'г' },
+                    { name: 'Помидор', amount: 1, unit: 'шт' },
+                    { name: 'Сметана или горчица', amount: 20, unit: 'г', category: 'сметана' }
+                ],
+                steps: [
+                    'Смажь ломтики хлеба тонким слоем сметаны или горчицы.',
+                    'Выложи ветчину, тонкие кружочки помидора и щедро накрой сыром.',
+                    'Запекай при 190°C 6–7 минут до пузырящегося румяного сыра.'
+                ]
+            },
+            {
+                id: 'sausages-dough',
+                title: 'Сосиски в слоёном тесте за 12 минут',
+                emoji: '🌭',
+                moods: ['quick', 'breakfast', 'baking'],
+                temp: 185,
+                time: 12,
+                baseServings: 3,
+                calories: '295 ккал',
+                keywords: ['сосиски', 'сосиски в тесте', 'тесто', 'выпечка', 'быстро', 'перекус'],
+                ingredients: [
+                    { name: 'Сосиски молочные', amount: 6, unit: 'шт' },
+                    { name: 'Слоёное бездрожжевое тесто', amount: 250, unit: 'г' },
+                    { name: 'Яйцо (для смазывания)', amount: 1, unit: 'шт', category: 'яйцо' },
+                    { name: 'Кунжут (по желанию)', amount: 1, unit: 'ч.л.' }
+                ],
+                steps: [
+                    'Разморозь пласт слоёного теста, слегка раскатай и нарежь на 6 полосок.',
+                    'Оберни каждую сосиску спиралью внахлёст, смажь взбитым яйцом и посыпь кунжутом.',
+                    'Выложи на пергамент с зазором и выпекай при 185°C 12 минут до пышной золотистой корочки.'
+                ]
+            },
+            {
+                id: 'baked-apples-curd',
+                title: 'Запечённые яблоки с творогом, мёдом и корицей',
+                emoji: '🍎',
+                moods: ['baking', 'breakfast', 'light'],
+                temp: 175,
+                time: 18,
+                baseServings: 2,
+                calories: '140 ккал',
+                keywords: ['яблоки', 'запечённые яблоки', 'творог', 'десерт', 'пп', 'без сахара'],
+                ingredients: [
+                    { name: 'Яблоки крупные', amount: 2, unit: 'шт', category: 'яблоки' },
+                    { name: 'Творог мягкий', amount: 120, unit: 'г', category: 'творог' },
+                    { name: 'Мёд', amount: 2, unit: 'ч.л.', category: 'сахар' },
+                    { name: 'Корица и грецкий орех', amount: 10, unit: 'г' }
+                ],
+                steps: [
+                    'Срежь у яблок верхушку и аккуратно вырежи сердцевину ложкой, не протыкая дно.',
+                    'Смешай творог с мёдом и орехами, плотно начини яблоки и посыпь корицей.',
+                    'Поставь яблоки в чашу (можно в формочки из фольги) и запекай при 175°C 18 минут.'
+                ]
             }
         ];
 
         // =========================================================================
-        // 3. СОСТОЯНИЕ ПРИЛОЖЕНИЯ И РАБОТА С LOCALSTORAGE
+        // 3. СОСТОЯНИЕ ПРИЛОЖЕНИЯ
         // =========================================================================
-        const STORAGE_KEY = 'airfryer_tma_favorites_v1';
-
-        function loadFavorites() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                return raw ? JSON.parse(raw) : [];
-            } catch (e) {
-                return [];
-            }
-        }
-
-        function saveFavorites(list) {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-            } catch (e) {}
-        }
-
         const state = {
-            activeTab: 'discover',
-            selectedMood: 'any',
+            searchMode: 'name',          // 'name' | 'fridge'
             searchQuery: '',
-            displayedRecipes: [],
-            favorites: loadFavorites(),
+            selectedMood: 'all',
+            onlyFavorites: false,
+            favorites: JSON.parse(localStorage.getItem('airfryer_favs_v2') || '[]'),
             selectedRecipe: null,
-            checkedIngredients: new Set(),
-            isLoading: false,
-            isAiSource: false,
-            seenTitles: new Set(),
-            offlineOffset: 0
+            servings: 2,
+            // Модификации ингредиентов для текущего открытого рецепта:
+            // { [index]: { removed: boolean, replacement: string | null, openDrawer: boolean } }
+            ingMods: {},
+            // Состояние таймера
+            timer: {
+                totalSeconds: 0,
+                remainingSeconds: 0,
+                isRunning: false,
+                halfwayNotified: false,
+                intervalId: null
+            }
         };
 
         // =========================================================================
-        // 4. УМНЫЙ ОФЛАЙН-ПОИСК И ФИЛЬТРАЦИЯ (ФОЛБЭК)
+        // 4. УМНЫЙ ПОИСК (ПАДЕЖИ РУССКОГО ЯЗЫКА + ПОИСК ПО ХОЛОДИЛЬНИКУ)
         // =========================================================================
-        function normalizeRu(text) {
-            return (text || '')
+        function stemRussianWord(word) {
+            let w = word.toLowerCase().replace(/ё/g, 'е').trim();
+            if (w.length <= 3) return w;
+            // Отрезаем частые окончания существительных и прилагательных
+            return w.replace(/(ами|ями|ого|его|ому|ему|ыми|ими|ою|ею|ой|ей|ий|ый|ая|яя|ое|ее|ые|ие|ов|ев|ом|ем|ах|ях|у|ю|а|я|о|е|ы|и|ь)$/, '');
+        }
+
+        function matchesTextQuery(recipe, rawQuery) {
+            const tokens = rawQuery
                 .toLowerCase()
-                .replace(/ё/g, 'е')
-                .trim();
+                .split(/[\s,.;!?]+/)
+                .map(t => t.trim())
+                .filter(Boolean);
+
+            if (!tokens.length) return true;
+
+            const searchableCorpus = [
+                recipe.title,
+                ...(recipe.keywords || []),
+                ...recipe.ingredients.map(i => i.name)
+            ].join(' ').toLowerCase().replace(/ё/g, 'е');
+
+            const corpusWords = searchableCorpus.split(/[\s,.;:()\-–—]+/).filter(Boolean);
+            const corpusStems = corpusWords.map(stemRussianWord);
+
+            return tokens.every(token => {
+                const cleanToken = token.replace(/ё/g, 'е');
+                const stem = stemRussianWord(cleanToken);
+                if (searchableCorpus.includes(cleanToken)) return true;
+                if (stem.length >= 3) {
+                    return corpusStems.some(cs => cs.startsWith(stem) || stem.startsWith(cs));
+                }
+                return false;
+            });
         }
 
-        // Простой стемминг ключевых слов на русском (отсекаем окончания для лучшего поиска)
-        function extractStems(query) {
-            const stopWords = new Set(['в', 'на', 'с', 'и', 'под', 'для', 'из', 'по', 'без', 'очень', 'хочу', 'рецепт', 'аэрогриль', 'аэрогриле']);
-            return normalizeRu(query)
-                .split(/[\s,.;!?-]+/)
-                .filter(w => w.length >= 2 && !stopWords.has(w))
-                .map(w => (w.length > 5 ? w.slice(0, -2) : w.length > 3 ? w.slice(0, -1) : w));
-        }
+        function getFridgeMatchInfo(recipe, rawQuery) {
+            const userItems = rawQuery
+                .toLowerCase()
+                .split(/[,;\n]+|\s+/)
+                .map(s => s.trim())
+                .filter(s => s.length >= 2);
 
-        function getOfflineRecipes({ mood = 'any', query = '', excludeTitles = new Set(), limit = 4 }) {
-            const stems = extractStems(query);
+            if (!userItems.length) {
+                return { matchedCount: 0, totalCount: recipe.ingredients.length, matchedNames: [] };
+            }
 
-            const scored = OFFLINE_RECIPES.map(recipe => {
-                let score = 0;
-                const haystack = normalizeRu([
-                    recipe.title,
-                    recipe.description,
-                    ...(recipe.keywords || []),
-                    ...(recipe.ingredients || [])
-                ].join(' '));
+            const userStems = userItems.map(stemRussianWord);
+            const matchedNames = [];
 
-                // Совпадение по настроению
-                if (mood !== 'any' && recipe.moods.includes(mood)) {
-                    score += 10;
+            recipe.ingredients.forEach(ing => {
+                const ingWords = ing.name.toLowerCase().replace(/ё/g, 'е').split(/[\s,()]+/);
+                const ingStems = ingWords.map(stemRussianWord);
+                const isMatch = userStems.some((uStem, idx) => {
+                    const rawItem = userItems[idx].replace(/ё/g, 'е');
+                    if (ing.name.toLowerCase().replace(/ё/g, 'е').includes(rawItem)) return true;
+                    return uStem.length >= 3 && ingStems.some(iStem => iStem.startsWith(uStem) || uStem.startsWith(iStem));
+                });
+                if (isMatch) {
+                    matchedNames.push(ing.name);
                 }
-
-                // Совпадение по ключевым словам
-                if (stems.length > 0) {
-                    stems.forEach(stem => {
-                        if (haystack.includes(stem)) {
-                            score += 15;
-                        }
-                    });
-                }
-
-                // Штраф за уже показанные блюда, чтобы "Ещё варианты" давало свежие карточки
-                if (excludeTitles.has(recipe.title)) {
-                    score -= 20;
-                }
-
-                // Небольшой случайный фактор для разнообразия при "Любое / Удиви"
-                score += Math.random() * 4;
-
-                return { recipe, score };
             });
 
-            scored.sort((a, b) => b.score - a.score);
-            return scored.slice(0, limit).map(item => item.recipe);
-        }
-
-        // =========================================================================
-        // 5. ИНТЕГРАЦИЯ С GEMINI API (ГЕНЕРАЦИЯ РЕЦЕПТОВ ПО НАСТРОЕНИЮ И ЗАПРОСУ)
-        // =========================================================================
-        async function fetchAiRecipes({ mood, query, excludeTitles }) {
-            const apiKey = ""; // В среде выполнения ключ подставляется автоматически
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-
-            const moodObj = MOODS.find(m => m.id === mood) || MOODS[0];
-            const excludedList = Array.from(excludeTitles).slice(-12).join(', ');
-
-            const userPrompt = [
-                `Придумай 3 разнообразных, реалистичных и вкусных рецепта специально для приготовления в аэрогриле (Air Fryer) на русском языке.`,
-                query ? `Ключевой запрос пользователя: "${query}".` : `Запрос пользователя не задан, ориентируйся на настроение.`,
-                `Выбранное настроение/категория: "${moodObj.label}" (${moodObj.promptHint}).`,
-                excludedList ? `Не повторяй эти названия блюд: ${excludedList}.` : '',
-                `Обязательно указывай точные параметры для аэрогриля: температуру (например "190°C"), время (например "14 мин"), конкретные ингредиенты с граммовками, понятные шаги с учётом особенностей аэрогриля (разогрев, укладка в один слой, встряхивание корзины) и полезный лайфхак.`
-            ].filter(Boolean).join('\n');
-
-            const payload = {
-                contents: [{ parts: [{ text: userPrompt }] }],
-                systemInstruction: {
-                    parts: [{
-                        text: "Ты профессиональный шеф-повар и эксперт по приготовлению блюд в аэрогриле (Air Fryer). Отвечай строго на русском языке в заданном JSON-формате. Рецепты должны быть практичными, сочными и адаптированными под домашний аэрогриль."
-                    }]
-                },
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "ARRAY",
-                        items: {
-                            type: "OBJECT",
-                            properties: {
-                                emoji: { type: "STRING" },
-                                title: { type: "STRING" },
-                                description: { type: "STRING" },
-                                temperature: { type: "STRING" },
-                                time: { type: "STRING" },
-                                difficulty: { type: "STRING" },
-                                moodTags: {
-                                    type: "ARRAY",
-                                    items: { type: "STRING" }
-                                },
-                                ingredients: {
-                                    type: "ARRAY",
-                                    items: { type: "STRING" }
-                                },
-                                steps: {
-                                    type: "ARRAY",
-                                    items: { type: "STRING" }
-                                },
-                                tip: { type: "STRING" }
-                            },
-                            required: ["emoji", "title", "description", "temperature", "time", "difficulty", "moodTags", "ingredients", "steps", "tip"]
-                        }
-                    }
-                }
+            return {
+                matchedCount: matchedNames.length,
+                totalCount: recipe.ingredients.length,
+                matchedNames
             };
-
-            // Экспоненциальный бэкофф + таймаут 7 секунд для мгновенного фолбэка при селф-хостинге
-            const maxRetries = 2;
-            for (let attempt = 0; attempt <= maxRetries; attempt++) {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 7000);
-
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-
-                    const result = await response.json();
-                    const rawText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (!rawText) throw new Error('Empty response');
-
-                    const parsed = JSON.parse(rawText);
-                    if (!Array.isArray(parsed) || parsed.length === 0) {
-                        throw new Error('Invalid array');
-                    }
-
-                    // Нормализуем структуру под карточки приложения
-                    return parsed.map((item, idx) => ({
-                        id: `ai-${Date.now()}-${idx}`,
-                        emoji: item.emoji || '🍽️',
-                        title: item.title,
-                        description: item.description,
-                        temperature: item.temperature || '190°C',
-                        time: item.time || '15 мин',
-                        difficulty: item.difficulty || 'Легко',
-                        moods: [mood],
-                        customTags: Array.isArray(item.moodTags) ? item.moodTags.slice(0, 2) : [],
-                        ingredients: item.ingredients || [],
-                        steps: item.steps || [],
-                        tip: item.tip || 'Не перегружайте корзину аэрогриля, чтобы горячий воздух свободно циркулировал вокруг продуктов.'
-                    }));
-                } catch (err) {
-                    clearTimeout(timeoutId);
-                    if (attempt === maxRetries) {
-                        throw err;
-                    }
-                    await new Promise(res => setTimeout(res, 1000 * Math.pow(2, attempt)));
-                }
-            }
         }
 
         // =========================================================================
-        // 6. УПРАВЛЕНИЕ ПОИСКОМ И ПОДБОРОМ
+        // 5. РЕНДЕР МЕНЮ, ЧИПСОВ И СПИСКА РЕЦЕПТОВ
         // =========================================================================
-        async function discoverRecipes({ isLoadMore = false } = {}) {
-            if (state.isLoading) return;
+        function renderMoodChips() {
+            const container = document.getElementById('mood-chips');
+            if (!container) return;
 
-            state.isLoading = true;
-            renderSkeletons();
-            updateStatusHeader();
-
-            try {
-                const aiRecipes = await fetchAiRecipes({
-                    mood: state.selectedMood,
-                    query: state.searchQuery,
-                    excludeTitles: state.seenTitles
-                });
-
-                aiRecipes.forEach(r => state.seenTitles.add(r.title));
-                state.displayedRecipes = isLoadMore
-                    ? [...state.displayedRecipes, ...aiRecipes]
-                    : aiRecipes;
-                state.isAiSource = true;
-            } catch (e) {
-                // Бесшовный фолбэк на встроенную базу из 16+ рецептов
-                const fallbackRecipes = getOfflineRecipes({
-                    mood: state.selectedMood,
-                    query: state.searchQuery,
-                    excludeTitles: state.seenTitles,
-                    limit: isLoadMore ? 3 : 4
-                });
-
-                // Если все рецепты уже были показаны — сбрасываем историю просмотров
-                if (fallbackRecipes.every(r => state.seenTitles.has(r.title))) {
-                    state.seenTitles.clear();
-                }
-                fallbackRecipes.forEach(r => state.seenTitles.add(r.title));
-
-                state.displayedRecipes = isLoadMore
-                    ? [...state.displayedRecipes, ...fallbackRecipes]
-                    : fallbackRecipes;
-                state.isAiSource = false;
-            } finally {
-                state.isLoading = false;
-                updateStatusHeader();
-                renderRecipesList();
-            }
+            container.innerHTML = MOOD_CATEGORIES.map(cat => {
+                const active = state.selectedMood === cat.id && !state.onlyFavorites;
+                return `
+                    <button
+                        type="button"
+                        onclick="selectMood('${cat.id}')"
+                        class="chip-item px-3.5 py-2 rounded-xl text-xs font-semibold border ${
+                            active
+                                ? 'btn-accent border-transparent shadow-sm'
+                                : 'surface-card text-slate-200'
+                        }"
+                    >
+                        ${cat.label}
+                    </button>
+                `;
+            }).join('');
         }
 
-        function handleMoodSelect(moodId) {
-            triggerHaptic('light');
-            state.selectedMood = moodId;
-            state.seenTitles.clear();
-            renderMoodChips();
-            discoverRecipes({ isLoadMore: false });
+        function renderFridgeChips() {
+            const container = document.getElementById('fridge-chips');
+            if (!container) return;
+
+            const currentLower = state.searchQuery.toLowerCase();
+            container.innerHTML = QUICK_FRIDGE_ITEMS.map(item => {
+                const isSelected = currentLower.includes(item.toLowerCase());
+                return `
+                    <button
+                        type="button"
+                        onclick="toggleFridgeQuickItem('${item}')"
+                        class="chip-item px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border ${
+                            isSelected
+                                ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300'
+                                : 'surface-card text-hint'
+                        }"
+                    >
+                        ${isSelected ? '✓ ' : '+ '}${item}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function setSearchMode(mode) {
+            haptic('selection');
+            state.searchMode = mode;
+            const nameBtn = document.getElementById('mode-name-btn');
+            const fridgeBtn = document.getElementById('mode-fridge-btn');
+            const input = document.getElementById('search-input');
+            const fridgeWrapper = document.getElementById('fridge-chips-wrapper');
+
+            if (mode === 'name') {
+                nameBtn.className = 'py-1.5 px-3 rounded-lg text-xs font-semibold transition btn-accent';
+                fridgeBtn.className = 'py-1.5 px-3 rounded-lg text-xs font-semibold transition text-hint';
+                input.placeholder = 'Например: шарлотка, запеканка, крылышки...';
+                fridgeWrapper.classList.add('hidden');
+            } else {
+                fridgeBtn.className = 'py-1.5 px-3 rounded-lg text-xs font-semibold transition btn-accent';
+                nameBtn.className = 'py-1.5 px-3 rounded-lg text-xs font-semibold transition text-hint';
+                input.placeholder = 'Введи продукты через запятую: курица, картошка...';
+                fridgeWrapper.classList.remove('hidden');
+                renderFridgeChips();
+            }
+
+            renderRecipesFeed();
+        }
+
+        function toggleFridgeQuickItem(item) {
+            haptic('light');
+            const input = document.getElementById('search-input');
+            let parts = state.searchQuery
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
+
+            const existsIdx = parts.findIndex(p => p.toLowerCase() === item.toLowerCase());
+            if (existsIdx >= 0) {
+                parts.splice(existsIdx, 1);
+            } else {
+                parts.push(item.toLowerCase());
+            }
+
+            state.searchQuery = parts.join(', ');
+            input.value = state.searchQuery;
+            updateClearButtonVisibility();
+            renderFridgeChips();
+            renderRecipesFeed();
         }
 
         function handleSearchInput(val) {
             state.searchQuery = val;
-            const clearBtn = document.getElementById('clear-btn');
-            if (val.trim().length > 0) {
-                clearBtn.classList.remove('hidden');
-            } else {
-                clearBtn.classList.add('hidden');
+            updateClearButtonVisibility();
+            if (state.searchMode === 'fridge') {
+                renderFridgeChips();
             }
-        }
-
-        function handleSearchSubmit(event) {
-            event.preventDefault();
-            triggerHaptic('light');
-            const input = document.getElementById('search-input');
-            input.blur(); // Скрываем мобильную клавиатуру
-            state.searchQuery = input.value.trim();
-            state.seenTitles.clear();
-            discoverRecipes({ isLoadMore: false });
+            renderRecipesFeed();
         }
 
         function clearSearch() {
-            triggerHaptic('light');
-            const input = document.getElementById('search-input');
-            input.value = '';
+            haptic('light');
             state.searchQuery = '';
-            document.getElementById('clear-btn').classList.add('hidden');
-            state.seenTitles.clear();
-            discoverRecipes({ isLoadMore: false });
+            const input = document.getElementById('search-input');
+            if (input) input.value = '';
+            updateClearButtonVisibility();
+            if (state.searchMode === 'fridge') renderFridgeChips();
+            renderRecipesFeed();
         }
 
-        function handleGenerateMore() {
-            triggerHaptic('light');
-            discoverRecipes({ isLoadMore: true });
+        function updateClearButtonVisibility() {
+            const btn = document.getElementById('clear-search-btn');
+            if (!btn) return;
+            if (state.searchQuery.trim().length > 0) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+            }
         }
 
-        // =========================================================================
-        // 7. РЕНДЕР ИНТЕРФЕЙСА (ЧИПСЫ, КАРТОЧКИ, ИЗБРАННОЕ, ДЕТАЛКА)
-        // =========================================================================
-        function renderMoodChips() {
-            const container = document.getElementById('mood-chips');
-            container.innerHTML = MOODS.map(mood => {
-                const isActive = state.selectedMood === mood.id;
+        function selectMood(moodId) {
+            haptic('selection');
+            state.onlyFavorites = false;
+            state.selectedMood = moodId;
+            updateFavoritesBadge();
+            renderMoodChips();
+            renderRecipesFeed();
+        }
+
+        function toggleFavoritesView() {
+            haptic('light');
+            state.onlyFavorites = !state.onlyFavorites;
+            updateFavoritesBadge();
+            renderMoodChips();
+            renderRecipesFeed();
+        }
+
+        function resetAllFilters() {
+            haptic('light');
+            state.searchQuery = '';
+            state.selectedMood = 'all';
+            state.onlyFavorites = false;
+            const input = document.getElementById('search-input');
+            if (input) input.value = '';
+            updateClearButtonVisibility();
+            updateFavoritesBadge();
+            renderMoodChips();
+            if (state.searchMode === 'fridge') renderFridgeChips();
+            renderRecipesFeed();
+        }
+
+        function renderRecipesFeed() {
+            const grid = document.getElementById('recipes-grid');
+            const emptyState = document.getElementById('empty-state');
+            const resultsLabel = document.getElementById('results-label');
+            const resetBtn = document.getElementById('reset-filters-btn');
+            if (!grid) return;
+
+            let list = [...RECIPES];
+
+            // Фильтр по избранному
+            if (state.onlyFavorites) {
+                list = list.filter(r => state.favorites.includes(r.id));
+            } else if (state.selectedMood !== 'all') {
+                list = list.filter(r => r.moods.includes(state.selectedMood));
+            }
+
+            // Поиск по слову или по холодильнику
+            const q = state.searchQuery.trim();
+            const fridgeMatchesMap = {};
+
+            if (q.length > 0) {
+                if (state.searchMode === 'name') {
+                    list = list.filter(r => matchesTextQuery(r, q));
+                } else {
+                    list = list
+                        .map(r => {
+                            const info = getFridgeMatchInfo(r, q);
+                            fridgeMatchesMap[r.id] = info;
+                            return { recipe: r, info };
+                        })
+                        .filter(entry => entry.info.matchedCount > 0)
+                        .sort((a, b) => b.info.matchedCount - a.info.matchedCount)
+                        .map(entry => entry.recipe);
+                }
+            }
+
+            const hasActiveFilter = q.length > 0 || state.selectedMood !== 'all' || state.onlyFavorites;
+            if (resetBtn) {
+                resetBtn.classList.toggle('hidden', !hasActiveFilter);
+            }
+
+            if (resultsLabel) {
+                if (state.onlyFavorites) {
+                    resultsLabel.textContent = `Избранные рецепты: ${list.length}`;
+                } else if (q.length > 0) {
+                    resultsLabel.textContent = `Найдено вариантов: ${list.length}`;
+                } else {
+                    resultsLabel.textContent = `Проверенные рецепты (${list.length})`;
+                }
+            }
+
+            if (list.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            grid.innerHTML = list.map(recipe => {
+                const isFav = state.favorites.includes(recipe.id);
+                const fInfo = fridgeMatchesMap[recipe.id];
+                const matchBadge = fInfo
+                    ? `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        ✓ Есть ${fInfo.matchedCount} из ${fInfo.totalCount}
+                       </span>`
+                    : '';
+
+                const previewIngredients = recipe.ingredients
+                    .slice(0, 4)
+                    .map(i => {
+                        const isMatched = fInfo?.matchedNames.includes(i.name);
+                        return isMatched
+                            ? `<span class="text-emerald-300 font-semibold">${i.name}</span>`
+                            : `<span>${i.name}</span>`;
+                    })
+                    .join(' · ');
+
                 return `
-                    <button
-                        type="button"
-                        onclick="handleMoodSelect('${mood.id}')"
-                        class="shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold transition-all active:scale-95 border ${
-                            isActive
-                                ? 'bg-accent text-white border-transparent shadow-sm'
-                                : 'bg-card text-app border-subtle hover:border-[#ff6b35]/40'
-                        }"
+                    <article
+                        onclick="openRecipeModal('${recipe.id}')"
+                        class="surface-card rounded-2xl p-3.5 active:scale-[0.99] transition cursor-pointer relative"
                     >
-                        ${mood.label}
-                    </button>
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-start gap-3 min-w-0">
+                                <div class="w-11 h-11 rounded-xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center text-2xl shrink-0">
+                                    ${recipe.emoji}
+                                </div>
+                                <div class="min-w-0">
+                                    <h2 class="text-sm font-bold leading-snug mb-1">${recipe.title}</h2>
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-orange-500/15 text-orange-400">
+                                            🌡 ${recipe.temp}°C · ⏱ ${recipe.time} мин
+                                        </span>
+                                        <span class="text-[11px] text-hint">${recipe.calories}</span>
+                                        ${matchBadge}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                onclick="event.stopPropagation(); toggleFavorite('${recipe.id}')"
+                                class="w-8 h-8 rounded-lg bg-slate-800/60 flex items-center justify-center text-sm shrink-0 active:scale-90 transition"
+                                aria-label="В избранное"
+                            >
+                                ${isFav ? '❤️' : '🤍'}
+                            </button>
+                        </div>
+
+                        <p class="text-[11px] text-hint mt-2.5 truncate">
+                            ${previewIngredients}${recipe.ingredients.length > 4 ? '…' : ''}
+                        </p>
+                    </article>
                 `;
             }).join('');
         }
 
-        function updateStatusHeader() {
-            const labelEl = document.getElementById('results-label');
-            const aiPill = document.getElementById('source-pill');
-            const moodObj = MOODS.find(m => m.id === state.selectedMood);
+        function pickRandomRecipe() {
+            haptic('medium');
+            const pool = RECIPES;
+            const random = pool[Math.floor(Math.random() * pool.length)];
+            if (random) {
+                showToast(`🎲 Выбрал: ${random.title}`);
+                openRecipeModal(random.id);
+            }
+        }
 
-            if (state.isLoading) {
-                labelEl.textContent = 'Подбираем рецепты для аэрогриля...';
-            } else if (state.searchQuery) {
-                labelEl.textContent = `По запросу «${state.searchQuery}»`;
-            } else if (state.selectedMood !== 'any') {
-                labelEl.textContent = moodObj ? moodObj.label : 'Подборка';
+        // =========================================================================
+        // 6. ИЗБРАННОЕ
+        // =========================================================================
+        function toggleFavorite(recipeId) {
+            haptic('light');
+            const idx = state.favorites.indexOf(recipeId);
+            if (idx >= 0) {
+                state.favorites.splice(idx, 1);
+                showToast('Убрано из избранного');
             } else {
-                labelEl.textContent = 'Идеи для аэрогриля';
+                state.favorites.push(recipeId);
+                showToast('❤️ Сохранено в избранное');
             }
-
-            if (state.isAiSource && !state.isLoading) {
-                aiPill.classList.remove('hidden');
-                aiPill.classList.add('inline-flex');
-            } else {
-                aiPill.classList.add('hidden');
-                aiPill.classList.remove('inline-flex');
-            }
-        }
-
-        function renderSkeletons() {
-            const container = document.getElementById('recipes-list');
-            const skeletonsHtml = Array.from({ length: 3 }).map(() => `
-                <div class="bg-card border border-subtle rounded-2xl p-4 space-y-3">
-                    <div class="flex items-start gap-3">
-                        <div class="w-12 h-12 rounded-xl skeleton shrink-0"></div>
-                        <div class="flex-1 space-y-2 pt-1">
-                            <div class="h-4 w-3/4 rounded-lg skeleton"></div>
-                            <div class="h-3 w-1/2 rounded-lg skeleton"></div>
-                        </div>
-                    </div>
-                    <div class="h-3 w-full rounded-lg skeleton"></div>
-                    <div class="h-3 w-4/5 rounded-lg skeleton"></div>
-                </div>
-            `).join('');
-
-            if (state.displayedRecipes.length === 0) {
-                container.innerHTML = skeletonsHtml;
-            } else {
-                container.insertAdjacentHTML('beforeend', skeletonsHtml);
-            }
-        }
-
-        function getMoodBadgesHtml(recipe) {
-            if (recipe.customTags && recipe.customTags.length > 0) {
-                return recipe.customTags.map(tag => `
-                    <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-white/5 text-hint">
-                        ${escapeHtml(tag)}
-                    </span>
-                `).join('');
-            }
-            return (recipe.moods || [])
-                .slice(0, 2)
-                .map(mId => MOODS.find(m => m.id === mId))
-                .filter(Boolean)
-                .map(m => `
-                    <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-white/5 text-hint">
-                        ${m.label}
-                    </span>
-                `).join('');
-        }
-
-        function createRecipeCardHtml(recipe, index = 0) {
-            const isFav = state.favorites.some(f => f.title === recipe.title);
-            return `
-                <article
-                    onclick="openRecipeById('${recipe.id}')"
-                    style="animation-delay: ${Math.min(index * 45, 220)}ms"
-                    class="animate-card bg-card border border-subtle rounded-2xl p-4 active:scale-[0.985] transition-transform cursor-pointer hover:border-[#ff6b35]/40"
-                >
-                    <div class="flex items-start gap-3.5">
-                        <div class="w-12 h-12 rounded-xl bg-app/70 border border-subtle flex items-center justify-center text-2xl shrink-0">
-                            ${escapeHtml(recipe.emoji || '🍽️')}
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-start justify-between gap-2">
-                                <h3 class="text-[15px] font-bold leading-snug text-app">
-                                    ${escapeHtml(recipe.title)}
-                                </h3>
-                                ${isFav ? '<span class="text-accent text-xs shrink-0" title="В избранном">♥</span>' : ''}
-                            </div>
-
-                            <!-- Бейджи температуры и времени -->
-                            <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-accent-soft tabular-nums">
-                                    🌡️ ${escapeHtml(recipe.temperature)}
-                                </span>
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-app/80 text-app border border-subtle tabular-nums">
-                                    ⏱️ ${escapeHtml(recipe.time)}
-                                </span>
-                                ${getMoodBadgesHtml(recipe)}
-                            </div>
-                        </div>
-                    </div>
-
-                    <p class="mt-2.5 text-xs sm:text-[13px] text-hint leading-relaxed line-clamp-2">
-                        ${escapeHtml(recipe.description)}
-                    </p>
-                </article>
-            `;
-        }
-
-        function renderRecipesList() {
-            const container = document.getElementById('recipes-list');
-            container.innerHTML = state.displayedRecipes
-                .map((recipe, idx) => createRecipeCardHtml(recipe, idx))
-                .join('');
-        }
-
-        function renderFavoritesList() {
-            const container = document.getElementById('favorites-list');
+            localStorage.setItem('airfryer_favs_v2', JSON.stringify(state.favorites));
             updateFavoritesBadge();
-
-            if (state.favorites.length === 0) {
-                container.innerHTML = `
-                    <div class="py-16 px-4 text-center space-y-3">
-                        <div class="text-4xl">🔖</div>
-                        <h3 class="text-base font-bold text-app">В избранном пока пусто</h3>
-                        <p class="text-xs text-hint max-w-xs mx-auto leading-relaxed">
-                            Сохраняй понравившиеся рецепты, чтобы нужная температура и время всегда были под рукой.
-                        </p>
-                        <div class="pt-2">
-                            <button
-                                type="button"
-                                onclick="switchTab('discover')"
-                                class="px-5 py-2.5 rounded-xl bg-accent text-xs font-bold active:scale-95 transition-transform"
-                            >
-                                Подобрать рецепт
-                            </button>
-                        </div>
-                    </div>
-                `;
-                return;
+            renderRecipesFeed();
+            if (state.selectedRecipe?.id === recipeId) {
+                updateModalFavButton();
             }
+        }
 
-            container.innerHTML = state.favorites
-                .map((recipe, idx) => createRecipeCardHtml(recipe, idx))
-                .join('');
+        function toggleModalFavorite() {
+            if (state.selectedRecipe) {
+                toggleFavorite(state.selectedRecipe.id);
+            }
         }
 
         function updateFavoritesBadge() {
-            const badge = document.getElementById('fav-badge');
-            const count = state.favorites.length;
-            if (count > 0) {
-                badge.textContent = count;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
+            const countEl = document.getElementById('fav-count');
+            const iconEl = document.getElementById('fav-heart-icon');
+            const btnEl = document.getElementById('fav-filter-btn');
+            if (countEl) countEl.textContent = state.favorites.length;
+            if (iconEl) iconEl.textContent = state.onlyFavorites ? '❤️' : '🤍';
+            if (btnEl) {
+                btnEl.classList.toggle('ring-2', state.onlyFavorites);
+                btnEl.classList.toggle('ring-orange-500', state.onlyFavorites);
             }
         }
 
-        // =========================================================================
-        // 8. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК И ДЕТАЛЬНЫЙ ПРОСМОТР РЕЦЕПТА
-        // =========================================================================
-        function switchTab(tab) {
-            if (state.activeTab === tab) return;
-            triggerHaptic('light');
-            state.activeTab = tab;
-
-            const tabDiscover = document.getElementById('tab-discover');
-            const tabFavorites = document.getElementById('tab-favorites');
-            const viewDiscover = document.getElementById('view-discover');
-            const viewFavorites = document.getElementById('view-favorites');
-
-            if (tab === 'discover') {
-                tabDiscover.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-accent text-white shadow-sm';
-                tabDiscover.setAttribute('aria-selected', 'true');
-                tabFavorites.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-hint flex items-center gap-1.5';
-                tabFavorites.setAttribute('aria-selected', 'false');
-
-                viewDiscover.classList.remove('hidden');
-                viewFavorites.classList.add('hidden');
-                renderRecipesList();
-            } else {
-                tabFavorites.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-accent text-white shadow-sm flex items-center gap-1.5';
-                tabFavorites.setAttribute('aria-selected', 'true');
-                tabDiscover.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-hint';
-                tabDiscover.setAttribute('aria-selected', 'false');
-
-                viewFavorites.classList.remove('hidden');
-                viewFavorites.classList.add('flex');
-                viewDiscover.classList.add('hidden');
-                renderFavoritesList();
-            }
+        function updateModalFavButton() {
+            const btn = document.getElementById('modal-fav-btn');
+            if (!btn || !state.selectedRecipe) return;
+            const isFav = state.favorites.includes(state.selectedRecipe.id);
+            btn.textContent = isFav ? '❤️' : '🤍';
         }
 
-        function openRecipeById(recipeId) {
-            const recipe =
-                state.displayedRecipes.find(r => r.id === recipeId) ||
-                state.favorites.find(r => r.id === recipeId) ||
-                OFFLINE_RECIPES.find(r => r.id === recipeId);
+        // =========================================================================
+        // 7. МОДАЛЬНОЕ ОКНО РЕЦЕПТА, ПОРЦИИ И ЗАМЕНА/УДАЛЕНИЕ ИНГРЕДИЕНТОВ
+        // =========================================================================
+        function formatAmount(rawAmount, ratio) {
+            const scaled = rawAmount * ratio;
+            if (scaled >= 10) return Math.round(scaled);
+            const rounded = Math.round(scaled * 4) / 4;
+            return Number.isInteger(rounded) ? rounded : rounded.toString().replace('.', ',');
+        }
 
+        function getSubstitutesForIngredient(ing) {
+            if (ing.category && INGREDIENT_SUBSTITUTES[ing.category]) {
+                return INGREDIENT_SUBSTITUTES[ing.category];
+            }
+            const lower = ing.name.toLowerCase();
+            for (const key of Object.keys(INGREDIENT_SUBSTITUTES)) {
+                if (lower.includes(key)) {
+                    return INGREDIENT_SUBSTITUTES[key];
+                }
+            }
+            return [];
+        }
+
+        function openRecipeModal(recipeId) {
+            const recipe = RECIPES.find(r => r.id === recipeId);
             if (!recipe) return;
-            triggerHaptic('light');
+
+            haptic('light');
+            trackAppEvent('open_recipe', recipe.title);
 
             state.selectedRecipe = recipe;
-            state.checkedIngredients = new Set();
+            state.servings = recipe.baseServings;
+            state.ingMods = {};
 
-            // Заполнение данных в модальном окне
-            document.getElementById('modal-emoji').textContent = recipe.emoji || '🍽️';
-            document.getElementById('modal-title').textContent = recipe.title;
-            document.getElementById('modal-desc').textContent = recipe.description;
-            document.getElementById('modal-temp').textContent = recipe.temperature;
-            document.getElementById('modal-time').textContent = recipe.time;
-            document.getElementById('modal-difficulty').textContent = recipe.difficulty || 'Легко';
-            document.getElementById('modal-tip').textContent = recipe.tip;
-            document.getElementById('modal-tags').innerHTML = getMoodBadgesHtml(recipe);
+            // Сброс и инициализация таймера под время рецепта
+            resetTimer(recipe.time * 60, false);
 
-            renderModalIngredients();
-            renderModalSteps();
-            updateModalFavoriteButton();
+            updateModalFavButton();
+            renderModalContent();
 
             const modal = document.getElementById('recipe-modal');
             modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.getElementById('modal-scroll-area').scrollTop = 0;
-            document.body.style.overflow = 'hidden';
+            modal.scrollTop = 0;
 
-            // Показываем нативную кнопку "Назад" в Telegram
             try {
-                tg?.BackButton?.show?.();
+                tg?.BackButton?.show();
             } catch (e) {}
         }
 
         function closeRecipeModal() {
-            triggerHaptic('light');
-            state.selectedRecipe = null;
-
+            haptic('light');
+            stopTimerInterval();
             const modal = document.getElementById('recipe-modal');
             modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            document.body.style.overflow = '';
+            state.selectedRecipe = null;
 
             try {
-                tg?.BackButton?.hide?.();
+                tg?.BackButton?.hide();
             } catch (e) {}
-
-            // Обновляем список, чтобы отобразился актуальный статус избранного
-            if (state.activeTab === 'discover') {
-                renderRecipesList();
-            } else {
-                renderFavoritesList();
-            }
         }
 
-        function renderModalIngredients() {
-            const recipe = state.selectedRecipe;
-            if (!recipe) return;
+        function changeServings(delta) {
+            if (!state.selectedRecipe) return;
+            const next = state.servings + delta;
+            if (next < 1 || next > 8) return;
+            haptic('selection');
+            state.servings = next;
+            renderModalContent();
+        }
 
-            const container = document.getElementById('modal-ingredients');
-            const resetBtn = document.getElementById('reset-ingredients-btn');
+        function toggleIngDrawer(idx) {
+            haptic('light');
+            const current = state.ingMods[idx] || {};
+            state.ingMods[idx] = {
+                ...current,
+                openDrawer: !current.openDrawer
+            };
+            renderModalContent();
+        }
 
-            if (state.checkedIngredients.size > 0) {
-                resetBtn.classList.remove('hidden');
-            } else {
-                resetBtn.classList.add('hidden');
+        function applyIngReplacement(idx, newName) {
+            const cleaned = String(newName || '').trim();
+            if (!cleaned) return;
+            haptic('success');
+            state.ingMods[idx] = {
+                removed: false,
+                replacement: cleaned,
+                openDrawer: false
+            };
+            showToast(`Заменено на: ${cleaned}`);
+            renderModalContent();
+        }
+
+        function applyCustomReplacement(idx) {
+            const input = document.getElementById(`custom-sub-input-${idx}`);
+            if (!input) return;
+            if (!input.value.trim()) {
+                showToast('Впиши свой продукт для замены');
+                return;
             }
+            applyIngReplacement(idx, input.value);
+        }
 
-            container.innerHTML = (recipe.ingredients || []).map((item, idx) => {
-                const isChecked = state.checkedIngredients.has(idx);
+        function clearIngReplacement(idx) {
+            haptic('light');
+            state.ingMods[idx] = {
+                removed: false,
+                replacement: null,
+                openDrawer: false
+            };
+            renderModalContent();
+        }
+
+        function toggleIngRemoved(idx) {
+            haptic('medium');
+            const current = state.ingMods[idx] || {};
+            const nextRemoved = !current.removed;
+            state.ingMods[idx] = {
+                removed: nextRemoved,
+                replacement: nextRemoved ? null : current.replacement,
+                openDrawer: false
+            };
+            showToast(nextRemoved ? 'Ингредиент убран из рецепта' : 'Ингредиент возвращён');
+            renderModalContent();
+        }
+
+        function buildAirFryerAdaptationNotice(recipe) {
+            const warnings = [];
+            recipe.ingredients.forEach((ing, idx) => {
+                const mod = state.ingMods[idx];
+                if (!mod?.removed) return;
+                const lower = ing.name.toLowerCase();
+                if (lower.includes('масло')) {
+                    warnings.push('Вы убрали масло — используйте пергамент для аэрогриля или слегка сбрызните чашу водой, чтобы продукты не прилипли.');
+                } else if (lower.includes('яйц')) {
+                    warnings.push('Вы убрали яйца — масса может стать рассыпчатой, плотнее утрамбуйте её в форму.');
+                } else if (lower.includes('разрыхлитель')) {
+                    warnings.push('Без разрыхлителя выпечка поднимется меньше — проверьте готовность зубочисткой на 3 минуты раньше.');
+                }
+            });
+            return warnings;
+        }
+
+        function highlightStepsWithMods(steps, recipe) {
+            const activeSubs = [];
+            recipe.ingredients.forEach((ing, idx) => {
+                const mod = state.ingMods[idx];
+                if (mod?.replacement) {
+                    const baseWord = ing.name.split('(')[0].trim();
+                    const stem = stemRussianWord(baseWord.split(' ')[0]);
+                    activeSubs.push({
+                        original: baseWord,
+                        stem,
+                        replacement: mod.replacement
+                    });
+                }
+            });
+
+            return steps.map(step => {
+                let text = step;
+                activeSubs.forEach(sub => {
+                    if (sub.stem.length >= 3) {
+                        const regex = new RegExp(`(${sub.stem}[а-яё]*)`, 'gi');
+                        text = text.replace(
+                            regex,
+                            `<span class="underline decoration-emerald-400 font-semibold text-emerald-300">$1 → ${sub.replacement}</span>`
+                        );
+                    }
+                });
+                return text;
+            });
+        }
+
+        function renderModalContent() {
+            const recipe = state.selectedRecipe;
+            const body = document.getElementById('modal-body');
+            if (!recipe || !body) return;
+
+            const ratio = state.servings / recipe.baseServings;
+            const warnings = buildAirFryerAdaptationNotice(recipe);
+            const adaptedSteps = highlightStepsWithMods(recipe.steps, recipe);
+
+            const ingredientsHtml = recipe.ingredients.map((ing, idx) => {
+                const mod = state.ingMods[idx] || {};
+                const isRemoved = Boolean(mod.removed);
+                const replacement = mod.replacement;
+                const isOpen = Boolean(mod.openDrawer);
+                const amountStr = `${formatAmount(ing.amount, ratio)} ${ing.unit}`;
+                const presetSubs = getSubstitutesForIngredient(ing);
+
+                const presetsHtml = presetSubs.length > 0
+                    ? presetSubs.map(s => `
+                        <button
+                            type="button"
+                            onclick="applyIngReplacement(${idx}, '${s.name.replace(/'/g, "\\'")}')"
+                            class="w-full text-left p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600/40 transition"
+                        >
+                            <div class="text-xs font-semibold text-emerald-300">⇄ ${s.name}</div>
+                            <div class="text-[11px] text-hint">${s.tip}</div>
+                        </button>
+                    `).join('')
+                    : `<p class="text-[11px] text-hint">Впиши ниже любой продукт, который есть дома:</p>`;
+
                 return `
-                    <button
-                        type="button"
-                        onclick="toggleIngredient(${idx})"
-                        class="w-full px-4 py-3 flex items-center gap-3 text-left transition-colors hover:bg-white/[0.02]"
-                    >
-                        <span class="w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
-                            isChecked
-                                ? 'bg-accent border-[#ff6b35] text-white'
-                                : 'border-subtle bg-app/50'
-                        }">
-                            ${isChecked ? `
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8" d="M5 13l4 4L19 7"/>
-                                </svg>
-                            ` : ''}
-                        </span>
-                        <span class="text-sm transition-all ${
-                            isChecked ? 'line-through text-hint opacity-60' : 'text-app font-medium'
-                        }">
-                            ${escapeHtml(item)}
-                        </span>
-                    </button>
+                    <div class="py-2.5 border-b border-slate-700/30 last:border-b-0">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="min-w-0 flex-1 ${isRemoved ? 'opacity-45 line-through' : ''}">
+                                ${
+                                    replacement
+                                        ? `<div class="text-[11px] text-hint line-through">${ing.name}</div>
+                                           <div class="text-xs font-bold text-emerald-300">⇄ ${replacement}</div>`
+                                        : `<div class="text-xs font-semibold">${ing.name}</div>`
+                                }
+                                <div class="text-[11px] text-hint mt-0.5">${amountStr}</div>
+                            </div>
+
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                ${
+                                    !isRemoved
+                                        ? `<button
+                                            type="button"
+                                            onclick="toggleIngDrawer(${idx})"
+                                            class="px-2 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800/90 border border-slate-600/40 text-slate-200 active:scale-95 transition"
+                                            title="Заменить ингредиент"
+                                           >
+                                            ⇄ Заменить
+                                           </button>`
+                                        : ''
+                                }
+                                <button
+                                    type="button"
+                                    onclick="toggleIngRemoved(${idx})"
+                                    class="px-2 py-1.5 rounded-lg text-[11px] font-semibold border active:scale-95 transition ${
+                                        isRemoved
+                                            ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                                            : 'bg-slate-800/90 border-slate-600/40 text-hint'
+                                    }"
+                                    title="${isRemoved ? 'Вернуть' : 'Убрать ингредиент'}"
+                                >
+                                    ${isRemoved ? '↩ Вернуть' : '✕'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Панель выбора замены -->
+                        ${
+                            isOpen && !isRemoved
+                                ? `<div class="mt-2.5 p-2.5 rounded-xl bg-slate-900/80 border border-slate-700/60 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[11px] font-bold text-slate-300">Чем заменить «${ing.name}»?</span>
+                                        ${
+                                            replacement
+                                                ? `<button type="button" onclick="clearIngReplacement(${idx})" class="text-[11px] text-orange-400 font-semibold">Вернуть оригинал</button>`
+                                                : ''
+                                        }
+                                    </div>
+                                    <div class="space-y-1.5">${presetsHtml}</div>
+                                    <div class="flex gap-1.5 pt-1">
+                                        <input
+                                            id="custom-sub-input-${idx}"
+                                            type="text"
+                                            placeholder="Свой вариант из холодильника..."
+                                            class="flex-1 bg-slate-800 border border-slate-600/50 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-orange-500"
+                                            style="color: var(--text-color);"
+                                        >
+                                        <button
+                                            type="button"
+                                            onclick="applyCustomReplacement(${idx})"
+                                            class="btn-accent px-3 py-1.5 rounded-lg text-xs font-bold shrink-0"
+                                        >
+                                            ОК
+                                        </button>
+                                    </div>
+                                   </div>`
+                                : ''
+                        }
+                    </div>
                 `;
             }).join('');
-        }
 
-        function toggleIngredient(idx) {
-            triggerHaptic('light');
-            if (state.checkedIngredients.has(idx)) {
-                state.checkedIngredients.delete(idx);
-            } else {
-                state.checkedIngredients.add(idx);
-            }
-            renderModalIngredients();
-        }
+            const warningsHtml = warnings.length > 0
+                ? `<div class="p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-xs text-amber-200 space-y-1">
+                    <div class="font-bold">⚠️ Подсказка для аэрогриля:</div>
+                    ${warnings.map(w => `<p class="text-[11px] leading-relaxed">${w}</p>`).join('')}
+                   </div>`
+                : '';
 
-        function resetCheckedIngredients() {
-            triggerHaptic('light');
-            state.checkedIngredients.clear();
-            renderModalIngredients();
-        }
+            body.innerHTML = `
+                <!-- Заголовок и параметры -->
+                <div class="surface-card rounded-2xl p-4">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700/60 flex items-center justify-center text-3xl shrink-0">
+                            ${recipe.emoji}
+                        </div>
+                        <div>
+                            <h2 class="text-base font-extrabold leading-snug">${recipe.title}</h2>
+                            <p class="text-xs text-hint mt-0.5">${recipe.calories} на 100 г</p>
+                        </div>
+                    </div>
 
-        function renderModalSteps() {
-            const recipe = state.selectedRecipe;
-            if (!recipe) return;
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="p-2.5 rounded-xl bg-orange-500/15 border border-orange-500/30 text-center">
+                            <div class="text-[11px] text-orange-300/80">Температура</div>
+                            <div class="text-base font-extrabold text-orange-400">🌡 ${recipe.temp}°C</div>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-sky-500/15 border border-sky-500/30 text-center">
+                            <div class="text-[11px] text-sky-300/80">Время готовки</div>
+                            <div class="text-base font-extrabold text-sky-400">⏱ ${recipe.time} мин</div>
+                        </div>
+                    </div>
+                </div>
 
-            const container = document.getElementById('modal-steps');
-            container.innerHTML = (recipe.steps || []).map((step, idx) => `
-                <li class="bg-card border border-subtle rounded-2xl p-3.5 flex items-start gap-3">
-                    <span class="w-6 h-6 rounded-full bg-accent-soft text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 tabular-nums">
-                        ${idx + 1}
-                    </span>
-                    <p class="text-sm text-app leading-relaxed">
-                        ${escapeHtml(step)}
-                    </p>
-                </li>
-            `).join('');
-        }
+                <!-- Встроенный таймер с сигналом встряхивания -->
+                <div class="surface-card rounded-2xl p-4">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <div class="text-xs font-bold flex items-center gap-1.5">
+                                <span>⏲ Таймер аэрогриля</span>
+                            </div>
+                            <div id="timer-status-text" class="text-[11px] text-hint mt-0.5">
+                                Напомнит встряхнуть корзину на половине времени
+                            </div>
+                        </div>
 
-        function updateModalFavoriteButton() {
-            const recipe = state.selectedRecipe;
-            if (!recipe) return;
+                        <div id="timer-display" class="text-2xl font-extrabold font-mono tracking-tight text-orange-400">
+                            ${formatTimerDisplay(state.timer.remainingSeconds)}
+                        </div>
+                    </div>
 
-            const btn = document.getElementById('modal-fav-btn');
-            const isFav = state.favorites.some(f => f.title === recipe.title);
+                    <div id="timer-shake-banner" class="hidden mt-2.5 p-2.5 rounded-xl bg-amber-500/20 border border-amber-400/50 text-xs font-bold text-amber-200 text-center shake-alert-pulse">
+                        🔔 Половина времени! Встряхни корзину или переверни блюдо
+                    </div>
 
-            if (isFav) {
-                btn.className = 'w-full py-3.5 px-5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all bg-card border border-[#ff6b35]/50 text-accent';
-                btn.innerHTML = `<span>♥</span><span>В избранном (убрать)</span>`;
-            } else {
-                btn.className = 'w-full py-3.5 px-5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all bg-accent text-white shadow-lg';
-                btn.innerHTML = `<span>♡</span><span>Сохранить в избранное</span>`;
-            }
-        }
+                    <div class="grid grid-cols-2 gap-2 mt-3">
+                        <button id="timer-toggle-btn" type="button" onclick="toggleTimer()" class="btn-accent py-2.5 px-3 rounded-xl text-xs font-bold shadow active:scale-95 transition">
+                            ▶ Запустить таймер
+                        </button>
+                        <button type="button" onclick="resetTimer()" class="py-2.5 px-3 rounded-xl text-xs font-semibold bg-slate-800 border border-slate-600/40 active:scale-95 transition">
+                            ↺ Сбросить
+                        </button>
+                    </div>
+                </div>
 
-        function toggleCurrentFavorite() {
-            const recipe = state.selectedRecipe;
-            if (!recipe) return;
+                ${warningsHtml}
 
-            triggerHaptic('light');
-            const existingIdx = state.favorites.findIndex(f => f.title === recipe.title);
+                <!-- Ингредиенты + калькулятор порций + замены -->
+                <div class="surface-card rounded-2xl p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <h3 class="text-sm font-bold">Ингредиенты</h3>
+                            <p class="text-[11px] text-hint">Можно заменить или убрать любой продукт</p>
+                        </div>
 
-            if (existingIdx !== -1) {
-                state.favorites.splice(existingIdx, 1);
-                showToast('Убрано из избранного');
-            } else {
-                state.favorites.unshift(recipe);
-                showToast('Сохранено в избранное');
-            }
+                        <!-- Калькулятор порций -->
+                        <div class="flex items-center gap-2 bg-slate-800/90 border border-slate-700/60 rounded-xl p-1">
+                            <button type="button" onclick="changeServings(-1)" class="w-7 h-7 rounded-lg bg-slate-700/70 font-bold text-sm flex items-center justify-center active:scale-90">−</button>
+                            <span class="text-xs font-bold px-1">${state.servings} порц.</span>
+                            <button type="button" onclick="changeServings(1)" class="w-7 h-7 rounded-lg bg-slate-700/70 font-bold text-sm flex items-center justify-center active:scale-90">+</button>
+                        </div>
+                    </div>
 
-            saveFavorites(state.favorites);
-            updateFavoritesBadge();
-            updateModalFavoriteButton();
+                    <div>${ingredientsHtml}</div>
+                </div>
+
+                <!-- Пошаговое приготовление -->
+                <div class="surface-card rounded-2xl p-4">
+                    <h3 class="text-sm font-bold mb-3">Как готовить</h3>
+                    <ol class="space-y-3">
+                        ${adaptedSteps.map((step, i) => `
+                            <li class="flex items-start gap-2.5 text-xs leading-relaxed">
+                                <span class="w-5 h-5 rounded-full btn-accent text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                                    ${i + 1}
+                                </span>
+                                <span>${step}</span>
+                            </li>
+                        `).join('')}
+                    </ol>
+                </div>
+            `;
         }
 
         // =========================================================================
-        // 9. УТИЛИТЫ И СТАРТ ПРИЛОЖЕНИЯ
+        // 8. ТАЙМЕР СО ЗВУКОВЫМ СИГНАЛОМ И ВИБРАЦИЕЙ
         // =========================================================================
-        let toastTimer = null;
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            const text = document.getElementById('toast-text');
-            text.textContent = message;
-
-            toast.classList.remove('opacity-0', '-translate-y-2');
-            toast.classList.add('opacity-100', 'translate-y-0');
-
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => {
-                toast.classList.remove('opacity-100', 'translate-y-0');
-                toast.classList.add('opacity-0', '-translate-y-2');
-            }, 1800);
+        function formatTimerDisplay(totalSec) {
+            const mins = Math.floor(totalSec / 60);
+            const secs = totalSec % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         }
 
-        function escapeHtml(str) {
-            return String(str ?? '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+        function playBeepTone(repeat = 2) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                for (let i = 0; i < repeat; i++) {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = i % 2 === 0 ? 880 : 1046;
+                    gain.gain.setValueAtTime(0.18, ctx.currentTime + i * 0.28);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.28 + 0.24);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + i * 0.28);
+                    osc.stop(ctx.currentTime + i * 0.28 + 0.25);
+                }
+            } catch (e) {}
         }
 
-        // Инициализация при загрузке страницы
+        function stopTimerInterval() {
+            if (state.timer.intervalId) {
+                clearInterval(state.timer.intervalId);
+                state.timer.intervalId = null;
+            }
+            state.timer.isRunning = false;
+        }
+
+        function resetTimer(customSeconds = null, triggerHaptic = true) {
+            if (triggerHaptic) haptic('light');
+            stopTimerInterval();
+            const baseSec = customSeconds !== null
+                ? customSeconds
+                : (state.selectedRecipe ? state.selectedRecipe.time * 60 : 600);
+
+            state.timer.totalSeconds = baseSec;
+            state.timer.remainingSeconds = baseSec;
+            state.timer.halfwayNotified = false;
+
+            const disp = document.getElementById('timer-display');
+            const btn = document.getElementById('timer-toggle-btn');
+            const banner = document.getElementById('timer-shake-banner');
+            const statusText = document.getElementById('timer-status-text');
+
+            if (disp) disp.textContent = formatTimerDisplay(baseSec);
+            if (btn) btn.textContent = '▶ Запустить таймер';
+            if (banner) banner.classList.add('hidden');
+            if (statusText) statusText.textContent = 'Напомнит встряхнуть корзину на половине времени';
+        }
+
+        function toggleTimer() {
+            haptic('medium');
+            const btn = document.getElementById('timer-toggle-btn');
+
+            if (state.timer.isRunning) {
+                stopTimerInterval();
+                if (btn) btn.textContent = '▶ Продолжить';
+                return;
+            }
+
+            if (state.timer.remainingSeconds <= 0) {
+                resetTimer(null, false);
+            }
+
+            state.timer.isRunning = true;
+            if (btn) btn.textContent = '⏸ Пауза';
+
+            const halfwayPoint = Math.floor(state.timer.totalSeconds / 2);
+
+            state.timer.intervalId = setInterval(() => {
+                state.timer.remainingSeconds -= 1;
+
+                const disp = document.getElementById('timer-display');
+                if (disp) disp.textContent = formatTimerDisplay(Math.max(0, state.timer.remainingSeconds));
+
+                // Сигнал ровно на экваторе готовки (встряхнуть корзину)
+                if (!state.timer.halfwayNotified && state.timer.remainingSeconds <= halfwayPoint && state.timer.remainingSeconds > 0) {
+                    state.timer.halfwayNotified = true;
+                    haptic('warning');
+                    playBeepTone(2);
+                    const banner = document.getElementById('timer-shake-banner');
+                    if (banner) banner.classList.remove('hidden');
+                }
+
+                // Завершение таймера
+                if (state.timer.remainingSeconds <= 0) {
+                    stopTimerInterval();
+                    haptic('success');
+                    playBeepTone(4);
+                    const btnEl = document.getElementById('timer-toggle-btn');
+                    const statusEl = document.getElementById('timer-status-text');
+                    const bannerEl = document.getElementById('timer-shake-banner');
+                    if (btnEl) btnEl.textContent = '▶ Запустить снова';
+                    if (statusEl) statusEl.textContent = '✅ Время вышло! Блюдо готово';
+                    if (bannerEl) {
+                        bannerEl.textContent = '🎉 Готово! Доставай блюдо из аэрогриля';
+                        bannerEl.classList.remove('hidden');
+                    }
+                }
+            }, 1000);
+        }
+
+        // =========================================================================
+        // 9. ОТПРАВКА СПИСКА ПОКУПОК В TELEGRAM
+        // =========================================================================
+        function shareShoppingList() {
+            const recipe = state.selectedRecipe;
+            if (!recipe) return;
+
+            haptic('light');
+            const ratio = state.servings / recipe.baseServings;
+
+            const lines = [];
+            recipe.ingredients.forEach((ing, idx) => {
+                const mod = state.ingMods[idx] || {};
+                if (mod.removed) return;
+                const finalName = mod.replacement || ing.name;
+                const amountStr = `${formatAmount(ing.amount, ratio)} ${ing.unit}`;
+                lines.push(`• ${finalName} — ${amountStr}`);
+            });
+
+            const messageText = [
+                `🔥 ${recipe.title}`,
+                `🌡 ${recipe.temp}°C · ⏱ ${recipe.time} мин (${state.servings} порц.)`,
+                ``,
+                `🛒 Список продуктов:`,
+                ...lines
+            ].join('\n');
+
+            // Копируем в буфер обмена надёжным способом
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = messageText;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            } catch (e) {}
+
+            // Открываем нативное окно пересылки в Telegram (в Избранное или любой чат)
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(' ')}&text=${encodeURIComponent(messageText)}`;
+            try {
+                if (tg?.openTelegramLink) {
+                    tg.openTelegramLink(shareUrl);
+                } else {
+                    window.open(shareUrl, '_blank');
+                }
+            } catch (e) {}
+
+            showToast('📋 Список скопирован и готов к отправке');
+        }
+
+        // =========================================================================
+        // 10. ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ КОЛЁСИКОМ МЫШИ И ПЕРЕТАСКИВАНИЕМ
+        // =========================================================================
+        function enableHorizontalScrollEnhancements(el) {
+            if (!el) return;
+
+            // Прокрутка колёсиком мыши на десктопе
+            el.addEventListener('wheel', (e) => {
+                if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                    e.preventDefault();
+                    el.scrollLeft += e.deltaY;
+                }
+            }, { passive: false });
+
+            // Перетаскивание мышью (drag-to-scroll)
+            let isDown = false;
+            let startX = 0;
+            let scrollLeft = 0;
+
+            el.addEventListener('mousedown', (e) => {
+                isDown = true;
+                el.classList.add('grabbing');
+                startX = e.pageX - el.offsetLeft;
+                scrollLeft = el.scrollLeft;
+            });
+
+            el.addEventListener('mouseleave', () => {
+                isDown = false;
+                el.classList.remove('grabbing');
+            });
+
+            el.addEventListener('mouseup', () => {
+                isDown = false;
+                el.classList.remove('grabbing');
+            });
+
+            el.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - el.offsetLeft;
+                const walk = (x - startX) * 1.5;
+                el.scrollLeft = scrollLeft - walk;
+            });
+        }
+
+        // =========================================================================
+        // 11. ТИХАЯ ОТПРАВКА АНАЛИТИКИ ПОСЕТИТЕЛЕЙ В GOOGLE ТАБЛИЦУ
+        // =========================================================================
+        function trackAppEvent(eventName = 'app_open', details = '') {
+            try {
+                if (!ANALYTICS_WEBHOOK_URL || !ANALYTICS_WEBHOOK_URL.startsWith('http')) return;
+
+                if (eventName === 'app_open') {
+                    if (sessionStorage.getItem('airfryer_tma_logged')) return;
+                    sessionStorage.setItem('airfryer_tma_logged', '1');
+                }
+
+                const user = tg?.initDataUnsafe?.user || {};
+                const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Гость (браузер)';
+
+                const payload = {
+                    timestamp: new Date().toLocaleString('ru-RU'),
+                    userId: user.id ? String(user.id) : 'browser_guest',
+                    fullName: fullName,
+                    username: user.username ? `@${user.username}` : '—',
+                    platform: tg?.platform || 'web',
+                    event: eventName,
+                    details: String(details || '')
+                };
+
+                fetch(ANALYTICS_WEBHOOK_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    keepalive: true,
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                }).catch(() => {});
+            } catch (e) {}
+        }
+
+        // =========================================================================
+        // 12. ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
+        // =========================================================================
         window.addEventListener('DOMContentLoaded', () => {
-            initTelegramWebApp();
+            initTelegram();
+            trackAppEvent('app_open');
             renderMoodChips();
             updateFavoritesBadge();
+            renderRecipesFeed();
 
-            // Мгновенно показываем 4 стартовых рецепта без ожидания сети
-            const initialRecipes = getOfflineRecipes({ mood: 'any', limit: 4 });
-            initialRecipes.forEach(r => state.seenTitles.add(r.title));
-            state.displayedRecipes = initialRecipes;
-            renderRecipesList();
+            enableHorizontalScrollEnhancements(document.getElementById('mood-chips'));
+            enableHorizontalScrollEnhancements(document.getElementById('fridge-chips'));
         });
     </script>
 </body>
