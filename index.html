@@ -2163,8 +2163,7 @@
                 handleSearchInput(q);
             }
         }
-
-        async function fetchWithTimeout(url, options, timeoutMs = 10000) {
+        async function fetchWithTimeout(url, options, timeoutMs = 35000) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeoutMs);
             try {
@@ -2199,7 +2198,7 @@
             let response = null;
             let lastErr = null;
 
-            // 1. Пробуем основной быстрый прокси Cloudflare (таймаут 10 сек)
+            // 1. Основной запрос через защищённый Cloudflare Worker (ждём до 35 сек, пока ИИ соберёт 3 рецепта)
             if (AI_PROXY_URL) {
                 try {
                     const headers = { 'Content-Type': 'application/json' };
@@ -2210,15 +2209,15 @@
                         method: 'POST',
                         headers,
                         body: JSON.stringify({ query: userQuery })
-                    }, 10000);
+                    }, 35000);
                 } catch (err) {
                     lastErr = err;
                     response = null;
                 }
             }
 
-            // 2. Если Cloudflare недоступен/замедлен провайдером (часто в РФ без VPN) — идём через Google Apps Script
-            if ((!response || !response.ok) && ANALYTICS_WEBHOOK_URL) {
+            // 2. Запасной канал через Google Apps Script — только если Cloudflare заблокирован сетью и в скрипте включён ai_chef
+            if (!response && ANALYTICS_WEBHOOK_URL) {
                 try {
                     const gasResponse = await fetchWithTimeout(ANALYTICS_WEBHOOK_URL, {
                         method: 'POST',
@@ -2228,11 +2227,14 @@
                             query: userQuery,
                             userId: currentTgUserId
                         })
-                    }, 18000);
+                    }, 30000);
 
                     if (gasResponse && gasResponse.ok) {
-                        response = gasResponse;
-                        lastErr = null;
+                        const clonedText = await gasResponse.clone().text();
+                        if (clonedText.includes('candidates')) {
+                            response = gasResponse;
+                            lastErr = null;
+                        }
                     }
                 } catch (gasErr) {
                     if (!lastErr) lastErr = gasErr;
@@ -2241,25 +2243,25 @@
 
             try {
                 if (!response) {
-                    throw lastErr || new Error('TIMEOUT');
+                    throw lastErr || new Error('NETWORK_TIMEOUT');
                 }
 
                 if (response.status === 403) {
-                    throw new Error('ACCESS_DENIED');
+                    throw new Error('ACCESS_DENIED_403');
                 }
 
                 if (response.status === 429) {
-                    throw new Error('RATE_LIMIT');
+                    throw new Error('RATE_LIMIT_429');
                 }
 
                 if (!response.ok) {
                     const errBody = await response.text().catch(() => '');
-                    throw new Error(`HTTP_${response.status}:${errBody.slice(0, 120)}`);
+                    throw new Error(`HTTP_${response.status}: ${errBody.slice(0, 140)}`);
                 }
 
                 const result = await response.json();
                 if (result && result.error) {
-                    throw new Error(`API_ERR:${result.error.message || JSON.stringify(result.error)}`);
+                    throw new Error(`API_ERR: ${result.error.message || JSON.stringify(result.error)}`);
                 }
 
                 const rawText = result?.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -2345,17 +2347,15 @@
                 trackEvent('ai_generate', userQuery);
             } catch (err) {
                 haptic('error');
-                const msg = err && err.message ? err.message : '';
-                if (err && err.name === 'AbortError' || msg === 'TIMEOUT') {
-                    errorText.textContent = 'Сервер ИИ не ответил за 10 секунд — в РФ провайдеры часто блокируют домен workers.dev без VPN. Включи VPN или добавь запасной обработчик в свой Google Apps Script.';
-                } else if (msg === 'ACCESS_DENIED') {
-                    errorText.textContent = 'Запрос отклонён защитой сервера. Открой приложение через официального бота в Telegram.';
-                } else if (msg === 'RATE_LIMIT') {
+                const msg = err && err.message ? err.message : 'UNKNOWN';
+                if ((err && err.name === 'AbortError') || msg === 'NETWORK_TIMEOUT') {
+                    errorText.textContent = 'ИИ-Шеф не успел ответить за 35 секунд (возможно, нестабильный VPN или сеть). Попробуй ещё раз.';
+                } else if (msg === 'ACCESS_DENIED_403') {
+                    errorText.textContent = 'Сервер Cloudflare отклонил запрос (код 403). Проверь, что в воркере разрешён заголовок Origin или отключена строгая проверка Origin.';
+                } else if (msg === 'RATE_LIMIT_429') {
                     errorText.textContent = 'Слишком много запросов подряд (лимит — 10 рецептов в минуту). Подожди минуту и попробуй снова.';
-                } else if (msg.startsWith('HTTP_') || msg.startsWith('API_ERR:')) {
-                    errorText.textContent = `Ошибка ответа от Gemini (${msg}). Проверь, что в настройках прокси сохранён правильный GEMINI_API_KEY.`;
                 } else {
-                    errorText.textContent = 'Не удалось подключиться к ИИ (возможно, заблокирован workers.dev без VPN). Попробуй включить VPN или найди блюдо в офлайн-базе.';
+                    errorText.textContent = `Не удалось получить ответ от ИИ [${msg}].`;
                 }
                 errorBox.classList.remove('hidden');
             } finally {
